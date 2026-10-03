@@ -17,11 +17,44 @@
     "december": 0
   },
   "internet": 0,
-  "renters_insurance": 0,
+  "renters_insurance": 16,
   "groceries": 0,
   "security_deposit_months": 0,
   "application_fee": 0,
   "parking": 0,
   "bus_pass": 0,
-  "summer_income_gap_months": 0
+  "summer_income_gap_months": 0,
+  "monthly_utility_averages": {
+    "electric": 202,
+    "water": 28,
+    "sewer": 50
+  },
+  "internet_range": {
+    "low": 40,
+    "high": 90
+  },
+  "books_and_supplies": 1200,
+  "winter_semester_start": "January 13",
+  "fall_break": {
+    "start": "October 19",
+    "end": "October 20"
+  },
+  "security_deposit_legal_max_months": 1.5,
+  "security_deposit_notes": "Legal ceiling, not the typical deposit. First month's rent is not part of the security deposit.",
+  "student_fare_notes": "Active students with a yellow MCard have unlimited access to TheRide's fixed-route buses because U-M pays the fares.",
+  "commute_cost_ranges": {
+    "bus": {
+      "low": 0,
+      "expected": 0,
+      "high": 0
+    }
+  },
+  "commute_cost_eligibility": {
+    "bus": "Active University of Michigan students with a yellow MCard; TheRide fixed-route buses."
+  },
+  "rent_range": {
+    "low": 1200,
+    "high": 2500
+  },
+  "rent_range_notes": "User-provided typical range depending on apartment location and number of roommates; neighborhood, bedroom count, and per-apartment versus per-person basis not specified."
 }
