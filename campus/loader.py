@@ -298,3 +298,73 @@ def estimate_commute_cost(campus_id: str, method: str) -> dict[str, float]:
     if not isinstance(ranges, dict):
         raise ValueError(f'Missing commute_cost_ranges.{method}: provide monthly low/expected/high values; bus_pass and parking placeholders cannot establish commute ranges')
     return _cost_range(ranges.get(method), f'commute_cost_ranges.{method}')
+
+
+# Combine recurring costs into per-person line items and matching total ranges.
+# Move-in deposits and fees are separate one-time costs, not monthly expenses.
+def estimate_true_monthly_cost(
+    campus_id: str, rent: float, roommates: int = 0,
+    commute: str = "bus", month: Optional[str] = None
+) -> dict:
+    """Return items, total low/expected/high, and generic confidence.
+
+    Rent is whole-apartment monthly rent supplied by the caller.
+    Required data:
+      monthly_cost_config.bedrooms: bedroom count used for utilities
+      monthly_cost_config.basis: rent/internet/renters_insurance/groceries
+        each marked 'household' (equal split) or 'per_person'
+      monthly_cost_ranges: internet/renters_insurance/groceries ranges
+    Utilities and commute come from their existing helpers. Car ranges must
+    already include parking; it is not charged a second time.
+    month=None uses the current local calendar month.
+    Missing ranges or sharing assumptions raise clear errors, not estimates.
+    A listing rent alone does not justify 'specific' confidence for all costs.
+    """
+    from datetime import date
+
+    rent = _nonnegative_number(rent, 'rent')
+    if isinstance(roommates, bool) or not isinstance(roommates, int) or roommates < 0:
+        raise ValueError('roommates must be a nonnegative integer')
+    data = _load_cost_data(campus_id)
+    config = data.get('monthly_cost_config')
+    if not isinstance(config, dict):
+        raise ValueError('Missing monthly_cost_config: provide bedrooms and cost basis/sharing rules in the campus data file')
+    bedrooms = config.get('bedrooms')
+    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms <= 0:
+        raise ValueError('Missing or invalid monthly_cost_config.bedrooms: require a positive integer')
+    basis = config.get('basis')
+    if not isinstance(basis, dict):
+        raise ValueError('Missing monthly_cost_config.basis: provide household or per_person for each recurring cost')
+    for name in ('rent', 'internet', 'renters_insurance', 'groceries'):
+        if basis.get(name) not in ('household', 'per_person'):
+            raise ValueError(f'Missing or invalid monthly_cost_config.basis.{name}: require household or per_person')
+    if basis['rent'] != 'household':
+        raise ValueError('monthly_cost_config.basis.rent must be household: the input rent is whole-apartment rent')
+    ranges = data.get('monthly_cost_ranges')
+    if not isinstance(ranges, dict):
+        raise ValueError('Missing monthly_cost_ranges: provide low/expected/high for internet, renters_insurance, and groceries')
+    status = data.get('data_status', 'placeholder')
+    if status not in ('placeholder', 'verified'):
+        raise ValueError("data_status must be 'placeholder' or 'verified'")
+    if month is None:
+        month = calendar.month_name[date.today().month].lower()
+    occupants = roommates + 1
+    items = {
+        'rent': {key: rent / occupants for key in ('low', 'expected', 'high')},
+        'utilities': estimate_utilities(campus_id, month, bedrooms, roommates),
+    }
+    for name in ('internet', 'renters_insurance', 'groceries'):
+        cost = _cost_range(ranges.get(name), f'monthly_cost_ranges.{name}')
+        divisor = occupants if basis[name] == 'household' else 1
+        items[name] = {key: value / divisor for key, value in cost.items()}
+    items['commute'] = estimate_commute_cost(campus_id, commute)
+    total = {
+        key: sum(item[key] for item in items.values())
+        for key in ('low', 'expected', 'high')
+    }
+    if not all(math.isfinite(value) for value in total.values()):
+        raise ValueError('Monthly total exceeds the supported numeric range')
+    return {
+        'items': items, 'total': total, 'confidence': 'generic',
+        'data_status': status,
+    }
