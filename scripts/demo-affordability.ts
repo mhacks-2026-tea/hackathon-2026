@@ -1,5 +1,6 @@
 import type { FinancialProfile, HousingScenario, Transaction } from "../src/lib/finance/types.ts";
 import { evaluateAffordability } from "../src/lib/finance/affordability.ts";
+import { simulateAffordability } from "../src/lib/finance/simulation.ts";
 
 /**
  * Run from the repo root with Node 24:
@@ -70,14 +71,39 @@ console.log(`Monthly housing cost: ${dollars(result.monthlyHousingCostCents)}`);
 console.log(`Move-in cash (rent, deposit, fees, moving): ${dollars(result.upfrontCashRequiredCents)}`);
 console.log(`Chosen safety buffer: ${dollars(student.safetyBufferCents)}`);
 
-// Show month-end balances instead of printing hundreds of daily entries.
-const monthEnds = result.dailyBalances.filter((day, index, days) =>
-  index === days.length - 1 || day.date.slice(0, 7) !== days[index + 1].date.slice(0, 7),
-);
-console.table(monthEnds.map((day) => ({
-  date: day.date,
-  balance: dollars(day.projectedBalanceCents),
-  belowBuffer: day.belowSafetyBuffer,
+// Group daily balances by month so a paycheck cannot hide earlier cash gaps.
+const monthlyBalances = new Map<string, {
+  endingBalanceCents: number;
+  lowestBalanceCents: number;
+  lowestBalanceDate: string;
+  daysBelowBuffer: number;
+}>();
+for (const day of result.dailyBalances) {
+  const month = day.date.slice(0, 7);
+  const summary = monthlyBalances.get(month) ?? {
+    endingBalanceCents: day.projectedBalanceCents,
+    lowestBalanceCents: day.projectedBalanceCents,
+    lowestBalanceDate: day.date,
+    daysBelowBuffer: 0,
+  };
+  // Days arrive in order, so the final assignment is the month's ending balance.
+  summary.endingBalanceCents = day.projectedBalanceCents;
+  if (day.projectedBalanceCents < summary.lowestBalanceCents) {
+    summary.lowestBalanceCents = day.projectedBalanceCents;
+    summary.lowestBalanceDate = day.date;
+  }
+  if (day.belowSafetyBuffer) summary.daysBelowBuffer += 1;
+  monthlyBalances.set(month, summary);
+}
+
+// "Dipped below buffer" describes any day in the month, not just its last day.
+console.table([...monthlyBalances].map(([month, summary]) => ({
+  month,
+  endingBalance: dollars(summary.endingBalanceCents),
+  lowestBalance: dollars(summary.lowestBalanceCents),
+  lowestOn: summary.lowestBalanceDate,
+  dippedBelowBuffer: summary.daysBelowBuffer > 0,
+  daysBelowBuffer: summary.daysBelowBuffer,
 })));
 
 // Daily warnings can reveal gaps that a month-end table hides.
@@ -86,3 +112,63 @@ for (const warning of result.warnings) console.log(`- ${warning}`);
 if (result.warnings.length === 0) console.log("- No threshold warnings under these assumptions.");
 console.log("Assumptions:");
 for (const assumption of result.assumptions) console.log(`- ${assumption}`);
+
+// Test persistently higher/lower spending while keeping expected pay dates fixed.
+// The seed makes this demo repeatable; the 20% variation is an assumption,
+// not an uncertainty level learned from the student's history.
+const simulation = simulateAffordability(student, apartment, {
+  scenarioCount: 500,
+  seed: 42,
+  spendingVariationFraction: 0.2,
+  includeEstimatedCashFlows: true,
+});
+
+// Report the fraction as modeled scenarios, not a real-world probability.
+const percentage = (simulation.fractionBelowSafetyBuffer * 100).toFixed(1);
+console.log("\nSPENDING SENSITIVITY SIMULATION");
+console.log(`${percentage}% of ${simulation.scenarioCount} modeled scenarios fall below the ${dollars(student.safetyBufferCents)} buffer.`);
+console.log("Each scenario assumes spending stays between 80% and 120% of the baseline for the full forecast.");
+console.log("Income dates and amounts remain fixed, including the assumed summer income gap.");
+console.log("This is a sensitivity test, not a trained ML prediction or a calibrated probability.");
+
+// Compare a second fictional listing. Costs are explicit, not inferred from
+// adding a roommate: only rent and deposit change in this example.
+const cheaperApartment: HousingScenario = {
+  ...apartment,
+  name: "Fictional cheaper apartment",
+  monthlyRentCents: 75000,
+  securityDepositCents: 75000,
+};
+const cheaperResult = evaluateAffordability(student, cheaperApartment, {
+  includeEstimatedCashFlows: true,
+});
+
+// Use the same seed and spending assumptions for an apples-to-apples comparison.
+const cheaperSimulation = simulateAffordability(student, cheaperApartment, {
+  scenarioCount: 500,
+  seed: 42,
+  spendingVariationFraction: 0.2,
+  includeEstimatedCashFlows: true,
+});
+
+// Summarize both full daily timelines, not just their month-end balances.
+console.log("\nAPARTMENT COMPARISON — fictional listings");
+console.table([
+  { housing: apartment, affordability: result, risk: simulation },
+  { housing: cheaperApartment, affordability: cheaperResult, risk: cheaperSimulation },
+].map(({ housing, affordability, risk }) => {
+  const lowest = affordability.dailyBalances.reduce((minimum, day) =>
+    day.projectedBalanceCents < minimum.projectedBalanceCents ? day : minimum,
+  );
+  return {
+    apartment: housing.name,
+    monthlyHousing: dollars(affordability.monthlyHousingCostCents),
+    moveInCash: dollars(affordability.upfrontCashRequiredCents),
+    lowestBalance: dollars(lowest.projectedBalanceCents),
+    lowestOn: lowest.date,
+    daysBelowBuffer: affordability.dailyBalances.filter((day) => day.belowSafetyBuffer).length,
+    scenariosBelowBuffer: `${(risk.fractionBelowSafetyBuffer * 100).toFixed(1)}%`,
+  };
+}));
+console.log("Only rent and deposit differ. Utilities, income, everyday spending, and lease dates are unchanged.");
+console.log("Scenario percentages describe spending sensitivity, not real-world probabilities.");
