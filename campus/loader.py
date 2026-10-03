@@ -42,6 +42,7 @@ import calendar
 import csv
 import json
 import math
+from statistics import median
 from dataclasses import fields
 from pathlib import Path
 
@@ -103,7 +104,8 @@ def list_neighborhoods(campus_id: str) -> list[Neighborhood]:
         raise ValueError(f'Neighborhood file not found: {path}') from exc
     with stream:
         reader = csv.DictReader(stream)
-        required = [field.name for field in fields(Neighborhood)]
+        required = [field.name for field in fields(Neighborhood)
+                    if field.name not in {'type', 'notes'}]
         for name in required:
             if name not in (reader.fieldnames or []):
                 raise ValueError(f'{path}: missing required column {name!r}')
@@ -116,10 +118,9 @@ def list_neighborhoods(campus_id: str) -> list[Neighborhood]:
             if None in row:
                 raise ValueError(f'{path}: row {reader.line_num} has extra cells')
             values = {}
-            for name in required:
-                if row[name] is None:
-                    raise ValueError(f'{path}: row {reader.line_num}: missing cell {name!r}')
-                text = row[name].strip()
+            for field in fields(Neighborhood):
+                name = field.name
+                text = (row.get(name) or '').strip()
                 value = text or None
                 if text and name in numeric:
                     try:
@@ -130,6 +131,61 @@ def list_neighborhoods(campus_id: str) -> list[Neighborhood]:
                         raise ValueError(f'{path}: row {reader.line_num}: field {name!r} must be finite and nonnegative')
                 values[name] = value
             if values['neighborhood'] is None:
-                raise ValueError(f'{path}: row {reader.line_num}: field \'neighborhood\' must not be blank')
+                continue
             result.append(Neighborhood(**values))
         return result
+
+
+def get_rent_benchmark(
+    campus_id: str, bedrooms: int, shared: bool = False
+) -> dict[str, Optional[float]]:
+    """Return min/median/max of available neighborhood rent medians.
+
+    These describe the spread of neighborhood medians, not listing-level
+    bounds or a HUD baseline. Missing and zero placeholder rents are excluded.
+    Shared mode uses the recorded per-bedroom shared rent without deriving
+    an unsupported estimate from whole-unit rent.
+    """
+    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms not in (1, 2):
+        raise ValueError('bedrooms must be 1 or 2; no other bedroom rent columns are available')
+    if not isinstance(shared, bool):
+        raise ValueError('shared must be a boolean')
+    column = 'rent_per_bedroom_shared' if shared else f'median_{bedrooms}_bedroom_rent'
+    rents = [
+        rent for neighborhood in list_neighborhoods(campus_id)
+        if (rent := getattr(neighborhood, column)) is not None and rent > 0
+    ]
+    if not rents:
+        return {'low': None, 'median': None, 'high': None}
+    return {'low': min(rents), 'median': median(rents), 'high': max(rents)}
+
+
+def find_neighborhoods_in_budget(
+    campus_id: str, max_rent: float, bedrooms: int, max_commute_min: float
+) -> list[Neighborhood]:
+    """Find whole-unit rents within budget with at least one feasible commute.
+
+    Commute means the shortest available walk, bike, or bus time.
+    Missing or zero placeholder rents and missing commute times are skipped.
+    Incomplete unrelated fields do not exclude an otherwise usable record.
+    """
+    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms not in (1, 2):
+        raise ValueError('bedrooms must be 1 or 2; no other bedroom rent columns are available')
+    for name, value in (('max_rent', max_rent), ('max_commute_min', max_commute_min)):
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+            raise ValueError(f'{name} must be a finite nonnegative number')
+    column = f'median_{bedrooms}_bedroom_rent'
+    matches = []
+    for neighborhood in list_neighborhoods(campus_id):
+        rent = getattr(neighborhood, column)
+        if rent is None or rent <= 0 or rent > max_rent:
+            continue
+        times = [
+            time for time in (
+                neighborhood.walk_minutes, neighborhood.bike_minutes,
+                neighborhood.bus_minutes
+            ) if time is not None
+        ]
+        if times and min(times) <= max_commute_min:
+            matches.append(neighborhood)
+    return matches
