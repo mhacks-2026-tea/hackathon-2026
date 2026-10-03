@@ -189,3 +189,112 @@ def find_neighborhoods_in_budget(
         if times and min(times) <= max_commute_min:
             matches.append(neighborhood)
     return matches
+
+
+def _load_cost_data(campus_id: str) -> dict:
+    """Read cost data without requiring unrelated calendar metadata."""
+    if not campus_id or Path(campus_id).name != campus_id or campus_id in {'.', '..'}:
+        raise ValueError(f'Invalid campus ID: {campus_id!r}')
+    path = DATA_DIR / 'campuses' / f'{campus_id}.json'
+    try:
+        with path.open(encoding='utf-8') as stream:
+            data = json.load(stream)
+    except FileNotFoundError as exc:
+        raise ValueError(f'Campus profile not found: {path}') from exc
+    except json.JSONDecodeError as exc:
+        raise ValueError(f'{path}: invalid JSON: {exc.msg}') from exc
+    if not isinstance(data, dict):
+        raise ValueError(f'{path}: profile must be a JSON object')
+    return data
+
+
+def _nonnegative_number(value, field: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+        raise ValueError(f'{field} must be a finite nonnegative number')
+    return value
+
+
+def _cost_range(data, field: str) -> dict[str, float]:
+    if not isinstance(data, dict):
+        raise ValueError(f'Missing cost range {field!r}: provide low, expected, and high in the campus data file; a point or placeholder cannot supply a range')
+    result = {}
+    for key in ('low', 'expected', 'high'):
+        if key not in data or data[key] is None:
+            raise ValueError(f'Missing required field {field}.{key!s}')
+        result[key] = _nonnegative_number(data[key], f'{field}.{key}')
+    if not result['low'] <= result['expected'] <= result['high']:
+        raise ValueError(f'{field}: require low <= expected <= high')
+    return result
+
+
+def estimate_utilities(
+    campus_id: str, month: str, bedrooms: int, roommates: int
+) -> dict[str, float]:
+    """Return per-person monthly utility ranges from explicit household ranges.
+
+    Required data: utility_ranges_by_month[month][str(bedrooms)] containing
+    low/expected/high, and utility_split='equal'. Roommates means other
+    occupants, so an explicitly approved equal split uses roommates + 1.
+    Internet is separate and is not silently included.
+    """
+    if not isinstance(month, str) or month.lower() not in [m.lower() for m in list(calendar.month_name)[1:]]:
+        raise ValueError('month must be a full month name, such as january')
+    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms <= 0:
+        raise ValueError('bedrooms must be a positive integer')
+    if isinstance(roommates, bool) or not isinstance(roommates, int) or roommates < 0:
+        raise ValueError('roommates must be a nonnegative integer')
+    data = _load_cost_data(campus_id)
+    month = month.lower()
+    ranges = data.get('utility_ranges_by_month')
+    if not isinstance(ranges, dict) or not isinstance(ranges.get(month), dict):
+        raise ValueError(f'Missing utility_ranges_by_month.{month}: provide household low/expected/high ranges by bedroom count; monthly_utilities_by_month contains only point placeholders')
+    monthly = ranges[month]
+    household = _cost_range(monthly.get(str(bedrooms)), f'utility_ranges_by_month.{month}.{bedrooms}')
+    if data.get('utility_split') != 'equal':
+        raise ValueError("Missing or unsupported utility_split: record 'equal' in the data file only after confirming equal sharing")
+    return {key: value / (roommates + 1) for key, value in household.items()}
+
+
+def estimate_move_in_cost(campus_id: str, rent: float, extras: float = 0) -> dict:
+    """Return deposit, first month, application fee, extras, and their total.
+
+    No range is inferred. Existing data placeholders are preserved in the
+    arithmetic and explicitly labeled, so this is not a verified estimate.
+    data_status may be set to 'verified' only after data research/source logging.
+    """
+    rent = _nonnegative_number(rent, 'rent')
+    extras = _nonnegative_number(extras, 'extras')
+    data = _load_cost_data(campus_id)
+    for field in ('security_deposit_months', 'application_fee'):
+        if field not in data:
+            raise ValueError(f'Missing required field {field!r}')
+        _nonnegative_number(data[field], field)
+    status = data.get('data_status', 'placeholder')
+    if status not in ('placeholder', 'verified'):
+        raise ValueError("data_status must be 'placeholder' or 'verified'")
+    items = {
+        'security_deposit': rent * data['security_deposit_months'],
+        'first_month_rent': rent,
+        'application_fee': data['application_fee'],
+        'extras': extras,
+    }
+    total = sum(items.values())
+    if not math.isfinite(total):
+        raise ValueError('Move-in total exceeds the supported numeric range')
+    return {'items': items, 'total': total, 'data_status': status}
+
+
+def estimate_commute_cost(campus_id: str, method: str) -> dict[str, float]:
+    """Return an explicit monthly commute range for walk/bike/bus/car.
+
+    Required data: commute_cost_ranges[method] with low/expected/high.
+    No free walking/biking, student fares, or car operating costs are assumed.
+    """
+    if not isinstance(method, str) or method.lower() not in ('walk', 'bike', 'bus', 'car'):
+        raise ValueError('method must be walk, bike, bus, or car')
+    method = method.lower()
+    data = _load_cost_data(campus_id)
+    ranges = data.get('commute_cost_ranges')
+    if not isinstance(ranges, dict):
+        raise ValueError(f'Missing commute_cost_ranges.{method}: provide monthly low/expected/high values; bus_pass and parking placeholders cannot establish commute ranges')
+    return _cost_range(ranges.get(method), f'commute_cost_ranges.{method}')
