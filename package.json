@@ -1,0 +1,16 @@
+{
+  "name": "hackathon-2026-nessie",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "tsx scripts/test-nessie.ts",
+    "check:nessie": "node --env-file=.env.local --import tsx scripts/check-nessie.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
