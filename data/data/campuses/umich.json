@@ -1,0 +1,31 @@
+{
+  "id": "umich",
+  "name": "University of Michigan",
+  "city": "Ann Arbor",
+  "county": "",
+  "term_start_dates": {},
+  "typical_lease_start_window": {},
+  "summer_income_gap_months": 0,
+  "monthly_utilities_by_month": {
+    "january": 0,
+    "february": 0,
+    "march": 0,
+    "april": 0,
+    "may": 0,
+    "june": 0,
+    "july": 0,
+    "august": 0,
+    "september": 0,
+    "october": 0,
+    "november": 0,
+    "december": 0
+  },
+  "internet": 0,
+  "renters_insurance": 0,
+  "groceries": 0,
+  "security_deposit_months": 0,
+  "application_fee": 0,
+  "parking": 0,
+  "bus_pass": 0,
+  "student_fare_notes": ""
+}
