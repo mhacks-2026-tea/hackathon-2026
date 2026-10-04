@@ -24,7 +24,7 @@ export function buildHousingSchedule(scenario: HousingScenario): ScheduledCashFl
   if (end <= start) throw new Error("Lease end must be after lease start.");
 
   // Reuse existing calculators to validate all monetary inputs.
-  const monthlyCost = calculateMonthlyHousingCost(scenario);
+  calculateMonthlyHousingCost(scenario);
   const upfrontCash = calculateUpfrontCashRequired(scenario);
   // Rent belongs to the first monthly payment, so remove it from this entry.
   const oneTimeCost = upfrontCash - scenario.monthlyRentCents;
@@ -56,7 +56,7 @@ export function buildHousingSchedule(scenario: HousingScenario): ScheduledCashFl
       id: `housing:monthly:${firstDay.toISOString().slice(0, 10)}`,
       label: `${scenario.name}: monthly housing costs`,
       date: firstDay.toISOString().slice(0, 10),
-      amountCents: monthlyCost,
+      amountCents: calculateMonthlyHousingCost(scenario, firstDay.toISOString().slice(5, 7)),
       direction: "expense",
       certainty: "estimated",
     });

@@ -41,6 +41,8 @@ export interface HousingScenario {
   /** All costs represent this student's share. */
   monthlyRentCents: MoneyCents;
   monthlyUtilitiesCents: MoneyCents;
+  /** Optional seasonal estimates keyed 01 through 12; all months are required. */
+  monthlyUtilitiesByMonthCents?: Record<string, MoneyCents>;
   monthlyInternetCents: MoneyCents;
   monthlyInsuranceCents: MoneyCents;
   monthlyParkingCents: MoneyCents;

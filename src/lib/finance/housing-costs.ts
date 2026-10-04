@@ -3,11 +3,22 @@ import type { HousingScenario, MoneyCents } from "./types.ts";
 /** Total monthly housing expenses for the student's share, in cents. */
 export function calculateMonthlyHousingCost(
   scenario: HousingScenario,
+  month = scenario.leaseStart.slice(5, 7),
 ): MoneyCents {
+  const seasonal = scenario.monthlyUtilitiesByMonthCents;
+  if (seasonal) {
+    for (let index = 1; index <= 12; index++) {
+      const amount = seasonal[String(index).padStart(2, "0")];
+      if (!Number.isSafeInteger(amount) || amount < 0) {
+        throw new Error("Seasonal utilities require non-negative integer cents for all 12 months.");
+      }
+    }
+    if (!/^(0[1-9]|1[0-2])$/.test(month)) throw new Error("Invalid utility month.");
+  }
   // Recurring expenses are separate from one-time move-in costs.
   const costs = [
     scenario.monthlyRentCents,
-    scenario.monthlyUtilitiesCents,
+    seasonal ? seasonal[month] : scenario.monthlyUtilitiesCents,
     scenario.monthlyInternetCents,
     scenario.monthlyInsuranceCents,
     scenario.monthlyParkingCents,

@@ -161,3 +161,43 @@ python3 -m unittest discover -s tests -v
 ```
 
 27 tests cover the current scope, supplied rent endpoints, cost sums, sharing rules, validation, and removal of unsupported features. Tests do not verify source prices against live listings.
+
+## Campus + finance + Nessie integration
+
+`src/lib/finance/connect-campus.ts` connects the existing Python campus helpers to the TypeScript finance engine. Run it on a Node server with Python 3.10+ installed (`CAMPUS_PYTHON` optionally selects the executable). Ship the `campus/` and `data/` directories alongside `src/`; the bridge resolves the repository relative to the source module. A bundled/serverless deployment must preserve this layout and provide Python; the bridge is not compatible with an Edge-only runtime.
+
+```ts
+import { getStudentFinancialData } from './lib/nessie.js';
+import { evaluateCampusNessieAffordability } from './src/lib/finance/connect-campus.ts';
+
+const result = await evaluateCampusNessieAffordability(getStudentFinancialData, {
+  customerId,
+  financialContext: {
+    asOfDate: '2026-10-03', historyStartDate: '2026-10-01',
+    safetyBufferCents: 50000,
+    excludedBillIds: replacedRentBillIds, // Explicitly identify costs replaced by this proposal.
+  },
+  housing: {
+    campusId: 'umich', name: 'Example shared apartment',
+    leaseStart: '2026-10-04', leaseEnd: '2027-02-04',
+    monthlyApartmentRentDollars: 2600, bedrooms: 2, roommates: 1,
+    commute: 'bus', eligibleForStudentBusFare: true,
+    // Example inputs only: obtain the actual student's share for each listing.
+    monthlyParkingCents: 0, securityDepositCents: 130000,
+    applicationFeesCents: 5000, movingCostsCents: 15000,
+  },
+});
+```
+
+The calling route must authorize the supplied customer/account IDs. Surface thrown input/API/process errors and the returned `dataWarnings` rather than replacing missing costs with zero.
+
+- Whole-apartment rent is in dollars; the helper applies approved household sharing. Parking and move-in values are required student-share integer cents. An explicit zero is valid; missing values fail.
+- Bus requires explicit eligible-student fare confirmation. Driving is not supported by campus estimates.
+- `housing` contains the normalized scenario; `campusEstimates` retains all twelve months of low/expected/high ranges, confidence, data status, and source assumptions. The forecast uses expected estimates, not probability bounds.
+- Utility payments vary by calendar month on each lease anniversary. `monthlyHousingCostCents` summarizes the lease-start month; consult `dailyBalances` for the seasonal forecast.
+- Campus groceries are not added to housing: the finance spending forecast owns everyday spending. Sparse history can understate spending and must be reviewed. The wrapper does not infer which rent or utility bills to exclude; pass explicit exclusions for obligations replaced by the proposal.
+- The bridge leaves one-time costs to caller inputs and uses the existing engine's full-month billing, lease-end exclusivity, and 366-day horizon rules.
+
+Tests: `npm run test:campus-finance` runs the real Python bridge and exercises sharing, cent conversion, seasonal schedules, missing costs, unsupported inputs, process failure, and the combined finance entry point. Existing `npm run test:finance`, `npm test`, `npm run typecheck`, and Python campus tests still apply.
+
+For the existing fictional Alex Demo account, set `FINANCE_HISTORY_START=2026-10-01` in private `.env.local`, then run `npm run demo:campus-nessie`. This read-only example uses live Nessie data, campus estimates, and explicitly hypothetical rent/move-in inputs. It prints summary results only and is not an actual apartment quote.

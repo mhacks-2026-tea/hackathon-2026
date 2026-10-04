@@ -2,12 +2,16 @@
   "name": "hackathon-2026-nessie",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "tsx scripts/test-nessie.ts",
     "test:finance": "tsx scripts/test-finance.ts",
-    "check:nessie": "node --env-file=.env.local --import tsx scripts/check-nessie.ts"
+    "check:nessie": "node --env-file=.env.local --import tsx scripts/check-nessie.ts",
+    "test:campus-finance": "tsx scripts/test-campus-finance.ts",
+    "demo:campus-nessie": "node --env-file=.env.local --import tsx scripts/demo-campus-nessie.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
