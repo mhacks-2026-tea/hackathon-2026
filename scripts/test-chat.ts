@@ -1,0 +1,67 @@
+import assert from 'node:assert/strict';
+import { respondToChat } from '../lib/server/conversation';
+import { extractApartmentFacts, validateExtraction, type ApartmentFacts } from '../lib/server/asi-extraction';
+import { sealChat, openChat } from '../lib/server/chat-state';
+import { POST } from '../app/api/movin/route';
+const originalFetch = globalThis.fetch;
+const env = { ASI1_API_KEY: process.env.ASI1_API_KEY, MOVIN_DATA_MODE: process.env.MOVIN_DATA_MODE };
+const query = { monthlyRent: 1300, roommates: 0 };
+const complete: ApartmentFacts = { leaseStart: '2026-05-01', leaseEnd: '2026-06-01', bedrooms: 1, commute: 'walk', monthlyParkingCents: 0, securityDepositCents: 0, applicationFeesCents: 0, movingCostsCents: 0, safetyBufferCents: 50000 };
+try {
+  process.env.ASI1_API_KEY = 'fictional-test-key';
+  process.env.MOVIN_DATA_MODE = 'demo';
+  const first = await respondToChat('michigan', query, 'Can I afford it?', undefined, async () => ({ intent: 'affordability', patch: {} }));
+  assert.ok(first.reply.missingFields);
+  const token = sealChat(first.state);
+  assert.equal(openChat(token)?.id, first.state.id);
+  assert.equal(openChat(token.slice(0, -8) + 'aaaaaaaa'), undefined);
+  const now = Date.now;
+  Date.now = () => now() + 601000;
+  assert.equal(openChat(token), undefined);
+  Date.now = now;
+  const second = await respondToChat('michigan', query, 'Here are the remaining details', openChat(token), async () => ({ intent: 'affordability', patch: complete }));
+  assert.ok(second.reply.scenario);
+  assert.equal(second.state.id, first.state.id);
+  assert.equal(first.state.known.leaseEnd, undefined);
+  const details = await respondToChat('michigan', query, 'details', second.state, async () => { throw Error('Details must not call ASI'); });
+  assert.ok(details.reply.scenario);
+  const reset = await respondToChat('michigan', query, 'reset', second.state);
+  assert.equal(reset.state.known.monthlyApartmentRentDollars, undefined);
+  const separate = await respondToChat('michigan', query, 'hello', undefined, async () => ({ intent: 'unknown', patch: {} }));
+  assert.notEqual(separate.state.id, second.state.id);
+  assert.equal(separate.state.known.leaseEnd, undefined);
+  assert.throws(() => validateExtraction({ intent: 'affordability', patch: { leaseEnd: '2026-02-30' } }));
+  assert.throws(() => validateExtraction({ intent: 'affordability', patch: { movingCostsCents: 1.2 } }));
+  assert.equal(validateExtraction({ intent: 'affordability', patch: { commute: 'walking' } }).patch.commute, 'walk');
+  let calls = 0;
+  globalThis.fetch = async (_url, options) => {
+    calls++;
+    const body = String(options?.body);
+    assert.ok(!body.includes('availableBalanceCents'));
+    assert.ok(!body.includes('fictional-test-key'));
+    return Response.json({ choices: [{ message: { content: calls === 1 ? 'invalid' : JSON.stringify({ intent: 'affordability', patch: { applicationFeesCents: 5000 } }) } }] });
+  };
+  assert.equal((await extractApartmentFacts('$50 application fee', {})).patch.applicationFeesCents, 5000);
+  assert.equal(calls, 2);
+  calls = 0;
+  globalThis.fetch = async () => { calls++; return new Response('', { status: 401 }); };
+  await assert.rejects(() => extractApartmentFacts('rent', {}), /ASI access failed/);
+  assert.equal(calls, 1);
+  globalThis.fetch = async () => Response.json({ choices: [{ message: { content: JSON.stringify({ intent: 'affordability', patch: {} }) } }] });
+  const request = (cookie?: string) => new Request('https://example.com/api/movin', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(cookie ? { cookie } : {}) }, body: JSON.stringify({ action: 'ask', campus: 'michigan', query, question: 'Can I afford this apartment?' }) });
+  const response = await POST(request());
+  assert.equal(response.status, 200);
+  const cookie = response.headers.get('set-cookie')!;
+  assert.ok(cookie.includes('HttpOnly') && cookie.includes('Secure') && cookie.includes('Max-Age=600'));
+  const initial = await response.json();
+  globalThis.fetch = async () => Response.json({ choices: [{ message: { content: JSON.stringify({ intent: 'affordability', patch: complete }) } }] });
+  const followup = await POST(request(cookie.split(';')[0]));
+  assert.equal(followup.status, 200);
+  const final = await followup.json();
+  assert.equal(final.conversationId, initial.conversationId);
+  assert.ok(final.scenario);
+  console.log('PASS multi-turn extraction, real finance calculation, session isolation/reset, encrypted cookie expiry/tampering, cents/date validation, provider retries/auth errors, and HTTP cookie round-trip.');
+} finally {
+  globalThis.fetch = originalFetch;
+  for (const [key, value] of Object.entries(env)) { if (value === undefined) delete process.env[key]; else process.env[key] = value; }
+}
