@@ -1276,7 +1276,7 @@ function ChatExperience({
     setError(null);
 
     try {
-      const reply = await sendAssistantMessage(prompt, data, selectedQuery);
+      const reply = await sendAssistantMessage(prompt, data, selectedQuery, messages);
       setMessages((current) => [...current, reply]);
       if (reply.scenario) onSelectScenario(reply.scenario);
       if (reply.scenarioId) {
@@ -1323,7 +1323,7 @@ function ChatExperience({
                 </li>
               ))}
             </ul>
-            <p className="chat-demo-note">{data.assistantMode === 'asi' ? 'ASI interprets your question; the finance engine calculates the answer.' : 'Offline finance assistant · ASI is not configured. Ask about rent, roommates, spending, or your forecast.'}</p>
+            <p className="chat-demo-note">{data.assistantMode === 'asi' ? 'Chat with Movin · powered by ASI, with financial calculations from your selected plan.' : 'Offline finance assistant · ASI is not configured. Ask about rent, roommates, spending, or your forecast.'}</p>
           </div>
         ) : (
           <div className="chat-messages" aria-live="polite" aria-busy={isSending}>

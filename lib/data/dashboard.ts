@@ -16,6 +16,6 @@ export function estimateHousingScenario(query: HousingQuery, data: Pick<Dashboar
 export async function simulateHousingDecision(query: HousingQuery, data: DashboardData): Promise<AffordabilityResult> {
   return (await estimateHousingScenario(query, data)).result;
 }
-export function sendAssistantMessage(question: string, data: DashboardData, query: HousingQuery): Promise<ChatMessage & { scenario?: HousingScenario }> {
-  return request('/api/movin', { action: 'ask', campus: data.campus.id, query, question });
+export function sendAssistantMessage(question: string, data: DashboardData, query: HousingQuery, history: ChatMessage[] = []): Promise<ChatMessage & { scenario?: HousingScenario }> {
+  return request('/api/movin', { action: 'ask', campus: data.campus.id, query, question, history: history.slice(-8).map(({ role, content }) => ({ role, content: content.slice(0, 1500) })) });
 }

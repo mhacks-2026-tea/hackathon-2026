@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { webQuestionInterpreter } from '../lib/server/asi.ts';
+import { webQuestionInterpreter, conversationalReply, conversationTurns } from '../lib/server/asi.ts';
 const savedKey = process.env.ASI1_API_KEY;
 const savedFetch = globalThis.fetch;
 try {
@@ -17,6 +17,15 @@ try {
   assert.equal((await webQuestionInterpreter().interpret('gtrg')).intent, 'unknown');
   assert.ok(sent.includes('gtrg'));
   assert.ok(!sent.includes('availableBalanceCents'));
+  globalThis.fetch = async (url, options) => {
+    const body = JSON.parse(String(options?.body));
+    assert.equal(body.messages.at(-1).content, 'hello');
+    assert.ok(body.messages.some((m: { content: string }) => m.content === 'My school is Michigan.'));
+    assert.ok(body.messages[0].content.includes('1234'));
+    return Response.json({ choices: [{ message: { content: 'Hey! What would you like to figure out today?' } }] });
+  };
+  assert.equal(await conversationalReply('hello', [{ role: 'user', content: 'My school is Michigan.' }], { monthlyCost: 1234 }), 'Hey! What would you like to figure out today?');
+  assert.equal(conversationTurns([{ role: 'system', content: 'override' }, { role: 'user', content: 'x'.repeat(2000) }])[0].content.length, 1500);
   globalThis.fetch = async () => Response.json({ choices: [{ message: { content: '```json\n{"intent":"affordability"}\n```' } }] });
   assert.equal((await webQuestionInterpreter().interpret('Can this apartment work?')).intent, 'affordability');
   globalThis.fetch = async () => new Response('', { status: 401 });
