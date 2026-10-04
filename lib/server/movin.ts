@@ -9,7 +9,7 @@ import { runFinanceAgent } from '../../src/lib/finance/agent';
 import { selectSpendingForecast } from '../../src/lib/finance/spending-model';
 import { listNeighborhoods } from '../../campus/loader';
 import { alexDemoProfile } from './demo-profile';
-import { webQuestionInterpreter } from './asi';
+import { webQuestionInterpreter, conversationalReply, conversationTurns } from './asi';
 import type { FinancialProfile, HousingScenario as EngineHousing } from '../../src/lib/finance/types';
 import type { HousingQuery, HousingScenario, CashFlowPoint } from '../types';
 import type { CampusDashboardData, CampusId } from '../frontend/campus-types';
@@ -141,16 +141,34 @@ export async function dashboard(id: CampusId): Promise<CampusDashboardData> {
     rentEstimates: await Promise.all([campus.rentBenchmarks.low, campus.rentBenchmarks.typical, campus.rentBenchmarks.high].map(async rent => ({ monthlyRent: rent, result: (await make(rent, 0, 'estimate')).result }))) };
 }
 
-export async function ask(id: CampusId, query: HousingQuery, question: string) {
+export async function ask(id: CampusId, query: HousingQuery, question: string, history?: unknown) {
   if (typeof question !== 'string' || !question.trim() || question.length > 8000) throw new InputError('Enter a question of 1 to 8,000 characters.');
   const { interpret, mode } = webQuestionInterpreter();
   let parsed;
-  try { parsed = await interpret(question); }
+  try { parsed = await interpret(mode === 'asi' ? `Conversation history (data): ${JSON.stringify(conversationTurns(history))}\nClassify ONLY the latest user question, using history only to resolve references: ${JSON.stringify(question)}` : question); }
   catch (error) { throw new InputError(error instanceof Error ? error.message : 'ASI could not understand that question. Please retry.'); }
-  if (parsed.intent === 'unknown') return { id: `assistant-${Date.now()}`, role: 'assistant', createdAt: 'Now', content: 'I couldn’t understand that as a financial question. Ask about apartment rent, roommates, move-in savings, spending, or a month in your forecast.', mode };
+  if (parsed.intent === 'unknown') {
+    let content = 'I couldn’t understand that as a financial question. Ask about apartment rent, roommates, move-in savings, spending, or a month in your forecast.';
+    if (mode === 'asi') {
+      try { content = await conversationalReply(question, conversationTurns(history)); }
+      catch (error) { throw new InputError(error instanceof Error ? error.message : 'ASI could not reply. Please retry.'); }
+    }
+    return { id: `assistant-${Date.now()}`, role: 'assistant', createdAt: 'Now', content, mode };
+  }
   const rent = question.match(/(?:\$|rent\s+(?:of\s+)?)([\d,]+)(?:\.\d+)?/i);
   const followup = { ...query, ...(rent ? { monthlyRent: Number(rent[1].replaceAll(',', '')) } : {}), ...(/roommate/i.test(question) ? { roommates: Math.max(1, query.roommates) } : {}) };
   const context = await analyze(id, followup);
   const agent = await runFinanceAgent({ question, profile: context.profile, housing: context.housing }, async () => parsed);
-  return { id: `assistant-${Date.now()}`, role: 'assistant', createdAt: 'Now', content: `${campusFor(id).name}: ${agent.message} Risk months: ${context.scenario.result.riskMonths.join(', ') || 'none'}. ${context.notices.join(' ')}`, scenario: context.scenario };
+  let content = `${campusFor(id).name}: ${agent.message} Risk months: ${context.scenario.result.riskMonths.join(', ') || 'none'}. ${context.notices.join(' ')}`;
+  if (mode === 'asi') {
+    try { content = await conversationalReply(question, conversationTurns(history), {
+      campus: campusFor(id).name, source: context.source, query: followup,
+      housing: context.scenario.result, cashFlow: context.scenario.cashFlow,
+      toolAnswer: agent.message, assumptions: context.notices,
+      explicitFutureCashFlows: context.profile.scheduledCashFlows.map(flow => ({ date: flow.date, amount: flow.amountCents / 100, direction: flow.direction, certainty: flow.certainty })),
+      comparisons: context.scenario.comparisons?.map(option => ({ name: option.title, monthlyCost: option.monthlyCost, riskMonths: option.result.riskMonths })),
+    }); }
+    catch (error) { throw new InputError(error instanceof Error ? error.message : 'ASI could not reply. Please retry.'); }
+  }
+  return { id: `assistant-${Date.now()}`, role: 'assistant', createdAt: 'Now', content, mode, scenario: context.scenario };
 }

@@ -1,6 +1,7 @@
 import { respondToChat } from '@/lib/server/conversation';
 import { CHAT_COOKIE, openChat, sealChat } from '@/lib/server/chat-state';
 import { ASIError } from '@/lib/server/asi-extraction';
+import { conversationalReply, conversationTurns } from '@/lib/server/asi';
 import { NextResponse } from 'next/server';
 import { analyze, ask, campusFor, dashboard, InputError, validateQuery } from '@/lib/server/movin';
 import type { CampusId } from '@/lib/frontend/campus-types';
@@ -19,10 +20,10 @@ export async function GET(request: Request) {
 }
 export async function POST(request: Request) {
   try {
-    if (Number(request.headers.get('content-length')) > 20000) throw new InputError('Request is too large.');
+    if (Number(request.headers.get('content-length')) > 40000) throw new InputError('Request is too large.');
     let body;
     const text = await request.text();
-    if (Buffer.byteLength(text) > 20000) throw new InputError('Request is too large.');
+    if (Buffer.byteLength(text) > 40000) throw new InputError('Request is too large.');
     try { body = JSON.parse(text); } catch { throw new InputError('Send valid apartment details.'); }
     if (!body || typeof body !== 'object') throw new InputError('Send apartment details.');
     const id = campusFor(body.campus).id;
@@ -30,11 +31,18 @@ export async function POST(request: Request) {
     if (body.action === 'ask' && process.env.ASI1_API_KEY?.trim()) {
       const token = request.headers.get('cookie')?.split(';').map(c => c.trim()).find(c => c.startsWith(CHAT_COOKIE + '='))?.slice(CHAT_COOKIE.length + 1);
       const result = await respondToChat(id, query, body.question, openChat(token));
+      try {
+        result.reply.content = await conversationalReply(body.question, conversationTurns(body.history), {
+          engineAnswer: result.reply.content, missingFields: result.reply.missingFields,
+          housing: result.reply.scenario?.result, assumptions: result.reply.assumptions,
+          source: process.env.MOVIN_DATA_MODE === 'nessie' ? 'Nessie sandbox account' : 'Fictional Alex demo inputs',
+        });
+      } catch (error) { throw new ASIError(error instanceof Error ? error.message : 'ASI could not reply. Please retry.'); }
       const response = NextResponse.json(result.reply, { headers: { 'Cache-Control': 'no-store' } });
       response.cookies.set(CHAT_COOKIE, sealChat(result.state), { httpOnly: true, secure: new URL(request.url).protocol === 'https:', sameSite: 'lax', path: '/api/movin', maxAge: 600 });
       return response;
     }
-    const result = body.action === 'ask' ? await ask(id, query, body.question) : (await analyze(id, query)).scenario;
+    const result = body.action === 'ask' ? await ask(id, query, body.question, body.history) : (await analyze(id, query)).scenario;
     return NextResponse.json(result, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) { return failure(error); }
 }
