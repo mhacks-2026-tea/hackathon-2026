@@ -37,10 +37,6 @@ for (const bad of [
   { ...input, leaseStart: '2026-02-30' },
 ]) await assert.rejects(buildCampusHousingScenario(bad as CampusHousingRequest));
 assert.throws(() => calculateMonthlyHousingCost({ ...built.scenario, monthlyUtilitiesByMonthCents: { '01': 100 } }));
-const python = process.env.CAMPUS_PYTHON;
-process.env.CAMPUS_PYTHON = '/nonexistent/python';
-await assert.rejects(buildCampusHousingScenario(input), /Campus estimates unavailable/);
-if (python === undefined) delete process.env.CAMPUS_PYTHON; else process.env.CAMPUS_PYTHON = python;
 let fetched = false;
 const result = await evaluateCampusNessieAffordability(async () => {
   fetched = true;
@@ -53,4 +49,4 @@ assert.ok(fetched);
 assert.equal(result.affordability.monthlyHousingCostCents, calculateMonthlyHousingCost(built.scenario));
 assert.ok(result.affordability.assumptions.some(x => x.includes('groceries are excluded')));
 assert.equal(result.campusEstimates['01'].data_status, 'placeholder');
-console.log('PASS campus-finance: real Python bridge, dollars/cents, sharing, seasonal payments, no duplicate groceries, explicit costs, validation, process failure, and combined evaluation');
+console.log('PASS campus-finance: TypeScript campus helpers, dollars/cents, sharing, seasonal payments, no duplicate groceries, explicit costs, validation, and combined evaluation');

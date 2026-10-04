@@ -1,18 +1,9 @@
-import { execFile } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { MONTHS, getCampusProfile, estimateTrueMonthlyCost } from '../../../campus/loader.ts';
+import type { CampusMonth } from '../../../campus/loader.ts';
 import type { HousingScenario } from './types.ts';
 import { buildHousingSchedule } from './housing-schedule.ts';
 import { evaluateNessieAffordability } from './connect-nessie.ts';
 import type { NessieAffordabilityRequest, NessieDataFetcher } from './connect-nessie.ts';
-
-type CostRange = { low: number; expected: number; high: number };
-type CampusMonth = {
-  items: Record<'rent' | 'utilities' | 'internet' | 'renters_insurance' | 'groceries' | 'commute', CostRange>;
-  total: CostRange;
-  confidence: string;
-  data_status: string;
-  assumptions: unknown;
-};
 
 export interface CampusHousingRequest {
   campusId: string;
@@ -42,31 +33,16 @@ function cents(value: unknown): number {
   return amount;
 }
 
-/** Local Python is the single source of campus calculations; no duplicated pricing rules. */
-async function loadCampusMonths(input: CampusHousingRequest): Promise<Record<string, CampusMonth>> {
-  const repositoryRoot = fileURLToPath(new URL('../../../', import.meta.url));
-  const stdout = await new Promise<string>((resolve, reject) => {
-    const child = execFile(process.env.CAMPUS_PYTHON || 'python3', ['-m', 'campus.finance_bridge'], {
-      cwd: repositoryRoot, timeout: 15_000, maxBuffer: 1024 * 1024,
-    }, (error, output, stderr) => {
-      if (error) {
-        reject(new Error(`Campus estimates unavailable. Check Python and campus inputs. ${stderr.trim()}`));
-      } else resolve(output);
-    });
-    child.stdin?.on('error', () => { /* execFile reports startup/exit failures above. */ });
-    child.stdin?.end(JSON.stringify(input));
-  });
-  const result = JSON.parse(stdout) as { months: Record<string, CampusMonth> };
-  for (let month = 1; month <= 12; month++) {
-    const item = result.months?.[String(month).padStart(2, '0')];
-    if (!item?.items || !item.confidence || !item.data_status) throw new Error('Invalid campus bridge response.');
-    for (const name of ['rent', 'utilities', 'internet', 'renters_insurance', 'groceries', 'commute'] as const) {
-      const range = item.items[name];
-      for (const value of [range?.low, range?.expected, range?.high]) cents(value);
-      if (range.low > range.expected || range.expected > range.high) throw new Error('Invalid campus cost range.');
-    }
-  }
-  return result.months;
+/** Campus calculations run directly in Node, using the same JSON/CSV source data. */
+function loadCampusMonths(input: CampusHousingRequest): Record<string, CampusMonth> {
+  getCampusProfile(input.campusId);
+  return Object.fromEntries(MONTHS.map((month, index) => [
+    String(index + 1).padStart(2, '0'),
+    estimateTrueMonthlyCost({
+      campusId: input.campusId, rent: input.monthlyApartmentRentDollars,
+      roommates: input.roommates, commute: input.commute, month, bedrooms: input.bedrooms,
+    }),
+  ]));
 }
 
 /** Build a scenario while preserving all campus ranges/assumptions for the caller. */
@@ -76,7 +52,7 @@ export async function buildCampusHousingScenario(input: CampusHousingRequest) {
   if (input.commute === 'bus' && input.eligibleForStudentBusFare !== true) {
     throw new Error('Confirm eligible student bus fare or choose another supported travel method.');
   }
-  // Validate dates and all required user-supplied costs before launching Python.
+  // Validate dates and all required user-supplied costs before loading campus data.
   const placeholder: HousingScenario = {
     name: input.name, leaseStart: input.leaseStart, leaseEnd: input.leaseEnd,
     monthlyRentCents: 0, monthlyUtilitiesCents: 0, monthlyInternetCents: 0,
@@ -87,7 +63,7 @@ export async function buildCampusHousingScenario(input: CampusHousingRequest) {
     movingCostsCents: input.movingCostsCents,
   };
   buildHousingSchedule(placeholder);
-  const months = await loadCampusMonths(input);
+  const months = loadCampusMonths(input);
   const first = months[input.leaseStart.slice(5, 7)];
   const scenario: HousingScenario = {
     ...placeholder,

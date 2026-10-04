@@ -89,7 +89,7 @@ Reference: [Nessie JavaScript SDK](https://github.com/nessieisreal/nessie-javasc
 
 # UMich campus estimates
 
-Offline data and Python helpers for Movin. Requires Python 3.10+ and no third-party packages.
+Offline data and TypeScript helpers for Movin. Runs on Node.js 22+ with the existing project dependencies; no Python runtime is needed.
 
 ## Supported scope
 
@@ -106,41 +106,37 @@ Listing-specific move-in costs belong in the finance engine using actual user in
 
 ## Examples
 
-```python
-from campus.loader import (
-    get_campus_profile, get_rent_benchmark,
-    find_neighborhoods_in_budget, estimate_true_monthly_cost,
-)
+```ts
+import {
+  getCampusProfile, getRentBenchmark,
+  findNeighborhoodsInBudget, estimateTrueMonthlyCost,
+} from './campus/loader.ts';
 
-print(get_campus_profile("umich"))
-print(get_rent_benchmark("umich", bedrooms=1))
-# {'low': 825.0, 'high': 2550.0}
-
-matches = find_neighborhoods_in_budget("umich", max_rent=1000, bedrooms=1)
-print([row.neighborhood for row in matches])
-# ['Oxbridge'] -- potential range overlap, not a confirmed listing
-
-cost = estimate_true_monthly_cost(
-    "umich", rent=2600, roommates=1,
-    commute="bus", month="january", bedrooms=2,
-)
-print(cost["total"])
-# {'low': 1880.5, 'expected': 1910.5, 'high': 1940.5}
+console.log(getCampusProfile('umich'));
+console.log(getRentBenchmark('umich', 1));
+// { low: 825, high: 2550 }
+console.log(findNeighborhoodsInBudget('umich', 1000, 1).map(row => row.neighborhood));
+// ['Oxbridge'] -- potential range overlap, not a confirmed listing
+console.log(estimateTrueMonthlyCost({
+  campusId: 'umich', rent: 2600, roommates: 1,
+  commute: 'bus', month: 'january', bedrooms: 2,
+}).total);
+// { low: 1880.5, expected: 1910.5, high: 1940.5 }
 ```
 
 ## Contract and assumptions
 
 `CampusProfile` contains `id`, `name`, `city`, `state`, `term_start_dates`, and `student_fare_notes`.
 
-`Neighborhood` contains `neighborhood`, `notes`, `source`, and `rent_ranges`. Range keys are `1`, `2`, `3_plus`, `shared_1`, `shared_2`, and `shared_3_plus`. Each has `low`, `high`, and `high_lower_bound`. An explicitly open price such as `4500+` retains `high=None` and `high_lower_bound=4500`; no finite maximum is invented. This is a supplied open range, not an empty data placeholder.
+`Neighborhood` contains `neighborhood`, `notes`, `source`, and `rent_ranges`. Range keys are `1`, `2`, `3_plus`, `shared_1`, `shared_2`, and `shared_3_plus`. Each has `low`, `high`, and `high_lower_bound`. An explicitly open price such as `4500+` retains `high=null` and `high_lower_bound=4500`; no finite maximum is invented. This is a supplied open range, not an empty data placeholder.
 
-`get_rent_benchmark` returns low/high across the available neighborhood ranges. It no longer returns a fabricated or empty median. An open upper range propagates as `high=None`.
+`getRentBenchmark` returns low/high across the available neighborhood ranges. It no longer returns a fabricated or empty median. An open upper range propagates as `high=null`.
 
-`find_neighborhoods_in_budget` accepts campus ID, maximum rent, bedroom count, and optional `shared=True`. A match means the supplied range starts within budget; a particular available listing may cost more. Shared prices are already per person and are not divided again. No travel time claim is made. Studio rent ranges are not supplied, so the rent helpers require at least one bedroom.
+`findNeighborhoodsInBudget` accepts campus ID, maximum rent, bedroom count, and optional fourth argument `true` for shared prices. A match means the supplied range starts within budget; a particular available listing may cost more. Shared prices are already per person and are not divided again. No travel time claim is made. Studio rent ranges are not supplied, so the rent helpers require at least one bedroom.
 
-`estimate_true_monthly_cost` takes whole-apartment rent. Its itemized output is per person. Equal sharing is approved only for two occupants; insurance is per person. Fixed groceries are a household modeling assumption. When integrating with transaction forecasts, avoid adding these groceries on top of predicted grocery spending.
+`estimateTrueMonthlyCost` takes an input object containing whole-apartment rent. Its itemized output is per person. Equal sharing is approved only for two occupants; insurance is per person. Fixed groceries are a household modeling assumption. When integrating with transaction forecasts, avoid adding these groceries on top of predicted grocery spending.
 
-`estimate_commute_cost` supports only walk, bike, and bus. Walking/biking zero costs represent the supplied direct-travel assumptions, not equipment or maintenance budgets. Free bus fares apply only to eligible active U-M students with yellow MCard on TheRide fixed routes. The caller must check that eligibility before selecting bus.
+`estimateCommuteCost` supports only walk, bike, and bus. Walking/biking zero costs represent the supplied direct-travel assumptions, not equipment or maintenance budgets. Free bus fares apply only to eligible active U-M students with yellow MCard on TheRide fixed routes. The caller must check that eligibility before selecting bus.
 
 Costs are estimates, not guaranteed quotes. Utility modeling caps, fixed averages, and midpoint assumptions retain their labels. The existing generic confidence/placeholder status remains conservative; it is not independent verification of listing prices. Source notes and research dates are in `data/sources.md`.
 
@@ -157,14 +153,15 @@ Earlier requirements in `data/docs/PRD-campus-data.md` are background; this READ
 ## Tests
 
 ```sh
-python3 -m unittest discover -s tests -v
+npm run test:campus
+npm run test:all
 ```
 
-27 tests cover the current scope, supplied rent endpoints, cost sums, sharing rules, validation, and removal of unsupported features. Tests do not verify source prices against live listings.
+237 frozen reference cases from the previous Python implementation verify numeric and structural parity across all months, sharing, utility bedroom groups, and rent searches. TypeScript tests also cover CSV parsing, validation, missing fields, open utility bounds, and source provenance. Tests do not verify source prices against live listings. The Python implementation and tests have been replaced; the reference fixture requires no Python to run.
 
 ## Campus + finance + Nessie integration
 
-`src/lib/finance/connect-campus.ts` connects the existing Python campus helpers to the TypeScript finance engine. Run it on a Node server with Python 3.10+ installed (`CAMPUS_PYTHON` optionally selects the executable). Ship the `campus/` and `data/` directories alongside `src/`; the bridge resolves the repository relative to the source module. A bundled/serverless deployment must preserve this layout and provide Python; the bridge is not compatible with an Edge-only runtime.
+`src/lib/finance/connect-campus.ts` calls the TypeScript campus helpers directly in the Node server. There is no subprocess or Python installation. Ship `data/` beside the `campus/` module: the loader reads the unchanged JSON and CSV files relative to its module location, not the working directory. A bundled deployment must include these files and preserve that relative layout; this filesystem-based loader requires a Node runtime, not an Edge-only runtime.
 
 ```ts
 import { getStudentFinancialData } from './lib/nessie.js';
@@ -196,8 +193,12 @@ The calling route must authorize the supplied customer/account IDs. Surface thro
 - `housing` contains the normalized scenario; `campusEstimates` retains all twelve months of low/expected/high ranges, confidence, data status, and source assumptions. The forecast uses expected estimates, not probability bounds.
 - Utility payments vary by calendar month on each lease anniversary. `monthlyHousingCostCents` summarizes the lease-start month; consult `dailyBalances` for the seasonal forecast.
 - Campus groceries are not added to housing: the finance spending forecast owns everyday spending. Sparse history can understate spending and must be reviewed. The wrapper does not infer which rent or utility bills to exclude; pass explicit exclusions for obligations replaced by the proposal.
-- The bridge leaves one-time costs to caller inputs and uses the existing engine's full-month billing, lease-end exclusivity, and 366-day horizon rules.
+- The integration leaves one-time costs to caller inputs and uses the existing engine's full-month billing, lease-end exclusivity, and 366-day horizon rules.
 
-Tests: `npm run test:campus-finance` runs the real Python bridge and exercises sharing, cent conversion, seasonal schedules, missing costs, unsupported inputs, process failure, and the combined finance entry point. Existing `npm run test:finance`, `npm test`, `npm run typecheck`, and Python campus tests still apply.
+Tests: `npm run test:campus-finance` exercises the TypeScript campus helpers with sharing, cent conversion, seasonal schedules, missing costs, unsupported inputs, and the combined finance entry point. Run `npm run test:all` for typechecking and every Nessie, finance, campus, and integration check.
 
 For the existing fictional Alex Demo account, set `FINANCE_HISTORY_START=2026-10-01` in private `.env.local`, then run `npm run demo:campus-nessie`. This read-only example uses live Nessie data, campus estimates, and explicitly hypothetical rent/move-in inputs. It prints summary results only and is not an actual apartment quote.
+
+### TypeScript migration
+
+All active campus helper functions now use camelCase exports from `campus/loader.ts`: `getCampusProfile`, `listNeighborhoods`, `getRentBenchmark`, `findNeighborhoodsInBudget`, `estimateUtilities`, `estimateCommuteCost`, and `estimateTrueMonthlyCost`. JSON/CSV field names and returned cost shapes are preserved. `estimateTrueMonthlyCost` accepts the object shown above. The public `evaluateCampusNessieAffordability` call is unchanged. Remove any old `CAMPUS_PYTHON` setting; it is no longer read.

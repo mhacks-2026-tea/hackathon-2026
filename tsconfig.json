@@ -6,9 +6,19 @@
     "strict": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "types": ["node"],
-    "lib": ["ES2022", "DOM"],
+    "types": [
+      "node"
+    ],
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
     "skipLibCheck": true
   },
-  "include": ["lib/**/*.ts", "src/**/*.ts", "scripts/**/*.ts"]
+  "include": [
+    "lib/**/*.ts",
+    "src/**/*.ts",
+    "scripts/**/*.ts",
+    "campus/**/*.ts"
+  ]
 }
