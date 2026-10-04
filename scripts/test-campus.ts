@@ -78,3 +78,21 @@ for (const row of campus.listNeighborhoods('umich')) for (const [key, range] of 
   sourced(`umich.${row.neighborhood}.${prefix}_high`, range.high ?? `${range.high_lower_bound}+`);
 }
 console.log('PASS campus validation, CSV quoting, missing fields, open utility bounds, and source provenance');
+
+// Regression checks migrated from tests/test_integration_gaps.py.
+assert.deepEqual(campus.getRentBenchmark('umich', 1), { low: 825, high: 2550 });
+assert.deepEqual(campus.getRentBenchmark('umich', 2, true), { low: 700, high: 1750 });
+const kerrytown = campus.listNeighborhoods('umich').find(row => row.neighborhood === 'Kerrytown')!;
+assert.deepEqual(kerrytown.rent_ranges.shared_3_plus, { low: 833, high: null, high_lower_bound: 1500 });
+assert.equal(campus.getRentBenchmark('umich', 4).high, null);
+const matches = campus.findNeighborhoodsInBudget('umich', 1000, 1);
+assert.deepEqual(matches.map(row => row.neighborhood), ['Oxbridge']);
+assert.equal(matches[0].rent_ranges['1'].high, 1200);
+assert.equal('bus_minutes' in matches[0], false);
+assert.deepEqual(campus.findNeighborhoodsInBudget('umich', 700, 2, true).map(row => row.neighborhood), ['Oxbridge']);
+assert.deepEqual(campus.findNeighborhoodsInBudget('umich', 699, 2, true), []);
+for (const key of ['county', 'typical_lease_start_window', 'security_deposit_months', 'application_fee',
+  'parking', 'car_transportation_average', 'monthly_utilities_by_month', 'summer_income_gap_months']) {
+  assert.equal(key in real, false, `Unsupported profile field: ${key}`);
+}
+console.log('PASS migrated integration-gap checks');
