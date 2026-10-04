@@ -154,3 +154,118 @@ The following entries are historical and are replaced by the bedroom-specific ta
 | umich.Glazier Way / North Side.shared_rent_per_person_high | 950 | Shared monthly rent per-person range endpoint | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
 | umich.Downtown/Campus.rent_low | 2099 | Overall monthly rent lower endpoint; upper figure is open-ended | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Listing links needed |
 | umich.Downtown/Campus.shared_rent_per_person_low | 1100 | Shared monthly rent per-person lower endpoint; upper figure is open-ended | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Listing links needed |
+
+## Monthly utility ranges supplied by the user
+
+Source: Wise.com. Date found: 2026-10-03. Specific page not supplied; URL is optional. Values are for the apartment and exclude internet. Studio/1-bedroom and 3+-bedroom groups are preserved. Expected values are arithmetic midpoints of the displayed endpoints, explicitly authorized by the user. A '+' upper endpoint is not a finite cap: high is null and high_lower_bound stores its threshold. Earlier 360 aggregate and component averages are retained as separate prior figures, not combined with this table. Roommate shares remain user-defined.
+
+| Field | Value | Meaning | Source | Source URL | Date found | Verification |
+| --- | --- | --- | --- | --- | --- | --- |
+| umich.utility_ranges_by_month.january.1.low | 230 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.january.1.expected | 255 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.january.1.high_lower_bound | 280 | Reported open-ended upper threshold; not a ceiling | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.january.2.low | 330 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.january.2.expected | 365 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.january.2.high_lower_bound | 400 | Reported open-ended upper threshold; not a ceiling | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.january.3_plus.low | 470 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.january.3_plus.expected | 510 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.january.3_plus.high_lower_bound | 550 | Reported open-ended upper threshold; not a ceiling | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.february.1.low | 220 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.february.1.expected | 245 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.february.1.high_lower_bound | 270 | Reported open-ended upper threshold; not a ceiling | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.february.2.low | 320 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.february.2.expected | 355 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.february.2.high_lower_bound | 390 | Reported open-ended upper threshold; not a ceiling | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.february.3_plus.low | 450 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.february.3_plus.expected | 495 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.february.3_plus.high_lower_bound | 540 | Reported open-ended upper threshold; not a ceiling | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.march.1.low | 170 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.march.1.expected | 195 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.march.1.high | 220 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.march.2.low | 240 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.march.2.expected | 275 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.march.2.high | 310 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.march.3_plus.low | 340 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.march.3_plus.expected | 385 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.march.3_plus.high | 430 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.april.1.low | 110 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.april.1.expected | 125 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.april.1.high | 140 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.april.2.low | 150 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.april.2.expected | 175 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.april.2.high | 200 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.april.3_plus.low | 210 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.april.3_plus.expected | 245 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.april.3_plus.high | 280 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.may.1.low | 80 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.may.1.expected | 95 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.may.1.high | 110 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.may.2.low | 120 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.may.2.expected | 135 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.may.2.high | 150 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.may.3_plus.low | 160 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.may.3_plus.expected | 185 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.may.3_plus.high | 210 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.june.1.low | 120 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.june.1.expected | 140 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.june.1.high | 160 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.june.2.low | 170 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.june.2.expected | 195 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.june.2.high | 220 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.june.3_plus.low | 240 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.june.3_plus.expected | 275 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.june.3_plus.high | 310 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.july.1.low | 150 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.july.1.expected | 175 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.july.1.high | 200 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.july.2.low | 210 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.july.2.expected | 245 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.july.2.high | 280 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.july.3_plus.low | 300 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.july.3_plus.expected | 345 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.july.3_plus.high | 390 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.august.1.low | 140 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.august.1.expected | 165 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.august.1.high | 190 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.august.2.low | 200 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.august.2.expected | 230 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.august.2.high | 260 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.august.3_plus.low | 280 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.august.3_plus.expected | 325 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.august.3_plus.high | 370 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.september.1.low | 100 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.september.1.expected | 115 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.september.1.high | 130 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.september.2.low | 140 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.september.2.expected | 160 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.september.2.high | 180 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.september.3_plus.low | 190 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.september.3_plus.expected | 220 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.september.3_plus.high | 250 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.october.1.low | 90 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.october.1.expected | 105 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.october.1.high | 120 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.october.2.low | 130 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.october.2.expected | 145 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.october.2.high | 160 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.october.3_plus.low | 170 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.october.3_plus.expected | 195 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.october.3_plus.high | 220 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.november.1.low | 140 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.november.1.expected | 160 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.november.1.high | 180 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.november.2.low | 200 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.november.2.expected | 225 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.november.2.high | 250 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.november.3_plus.low | 280 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.november.3_plus.expected | 315 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.november.3_plus.high | 350 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.december.1.low | 200 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.december.1.expected | 225 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.december.1.high_lower_bound | 250 | Reported open-ended upper threshold; not a ceiling | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.december.2.low | 290 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.december.2.expected | 325 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.december.2.high_lower_bound | 360 | Reported open-ended upper threshold; not a ceiling | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.december.3_plus.low | 410 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.december.3_plus.expected | 455 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+| umich.utility_ranges_by_month.december.3_plus.high_lower_bound | 500 | Reported open-ended upper threshold; not a ceiling | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
