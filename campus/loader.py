@@ -229,30 +229,49 @@ def _cost_range(data, field: str) -> dict[str, float]:
 
 def estimate_utilities(
     campus_id: str, month: str, bedrooms: int, roommates: int
-) -> dict[str, float]:
-    """Return per-person monthly utility ranges from explicit household ranges.
+) -> dict[str, Optional[float]]:
+    """Return monthly per-person utilities using the stored bedroom group.
 
-    Required data: utility_ranges_by_month[month][str(bedrooms)] containing
-    low/expected/high, and utility_split='equal'. Roommates means other
-    occupants, so an explicitly approved equal split uses roommates + 1.
-    Internet is separate and is not silently included.
+    Apartment costs exclude internet. No roommates requires no sharing rule.
+    With roommates, equal sharing must be explicitly selected in the data.
+    A null high preserves an open-ended supplied upper price; expected uses
+    the user's approved midpoint, already stored in the data file.
     """
     if not isinstance(month, str) or month.lower() not in [m.lower() for m in list(calendar.month_name)[1:]]:
         raise ValueError('month must be a full month name, such as january')
-    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms <= 0:
-        raise ValueError('bedrooms must be a positive integer')
+    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms < 0:
+        raise ValueError('bedrooms must be a nonnegative integer; zero means studio')
     if isinstance(roommates, bool) or not isinstance(roommates, int) or roommates < 0:
         raise ValueError('roommates must be a nonnegative integer')
     data = _load_cost_data(campus_id)
     month = month.lower()
     ranges = data.get('utility_ranges_by_month')
     if not isinstance(ranges, dict) or not isinstance(ranges.get(month), dict):
-        raise ValueError(f'Missing utility_ranges_by_month.{month}: provide household low/expected/high ranges by bedroom count; monthly_utilities_by_month contains only point placeholders')
-    monthly = ranges[month]
-    household = _cost_range(monthly.get(str(bedrooms)), f'utility_ranges_by_month.{month}.{bedrooms}')
-    if data.get('utility_split') != 'equal':
-        raise ValueError("Missing or unsupported utility_split: record 'equal' in the data file only after confirming equal sharing")
-    return {key: value / (roommates + 1) for key, value in household.items()}
+        raise ValueError(f'Missing utility_ranges_by_month.{month}: provide household low/expected/high ranges by bedroom count')
+    group = str(max(bedrooms, 1))
+    if group not in ranges[month] and bedrooms > 2:
+        group = '3_plus'
+    field = f'utility_ranges_by_month.{month}.{group}'
+    raw = ranges[month].get(group)
+    if not isinstance(raw, dict):
+        raise ValueError(f'Missing cost range {field!r}')
+    for key in ('low', 'expected', 'high'):
+        if key not in raw:
+            raise ValueError(f'Missing required field {field}.{key}')
+    if raw['high'] is None:
+        lower = _nonnegative_number(raw.get('high_lower_bound'), f'{field}.high_lower_bound')
+        low = _nonnegative_number(raw['low'], f'{field}.low')
+        expected = _nonnegative_number(raw['expected'], f'{field}.expected')
+        if not low <= expected <= lower:
+            raise ValueError(f'{field}: require low <= expected <= high_lower_bound')
+        household = {'low': low, 'expected': expected, 'high': None}
+    else:
+        household = _cost_range(raw, field)
+    if roommates and data.get('utility_split') != 'equal':
+        raise ValueError('Utility shares are user-defined: provide the agreed shares; an equal split cannot be assumed')
+    divisor = roommates + 1
+    return {key: None if value is None else value / divisor
+            for key, value in household.items()}
 
 
 def estimate_move_in_cost(campus_id: str, rent: float, extras: float = 0) -> dict:
@@ -358,6 +377,8 @@ def estimate_true_monthly_cost(
         divisor = occupants if basis[name] == 'household' else 1
         items[name] = {key: value / divisor for key, value in cost.items()}
     items['commute'] = estimate_commute_cost(campus_id, commute)
+    if any(item.get('high') is None for item in items.values()):
+        raise ValueError('Cannot produce a finite monthly high total: a component has an open-ended upper range')
     total = {
         key: sum(item[key] for item in items.values())
         for key in ('low', 'expected', 'high')
