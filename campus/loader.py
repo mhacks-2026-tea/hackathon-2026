@@ -269,6 +269,9 @@ def estimate_utilities(
         household = _cost_range(raw, field)
     if roommates and data.get('utility_split') != 'equal':
         raise ValueError('Utility shares are user-defined: provide the agreed shares; an equal split cannot be assumed')
+    sharing_occupants = data.get('utility_sharing_occupants')
+    if roommates and sharing_occupants is not None and roommates + 1 != sharing_occupants:
+        raise ValueError('Utility sharing is approved only for the configured number of occupants')
     divisor = roommates + 1
     return {key: None if value is None else value / divisor
             for key, value in household.items()}
@@ -323,13 +326,15 @@ def estimate_commute_cost(campus_id: str, method: str) -> dict[str, float]:
 # Move-in deposits and fees are separate one-time costs, not monthly expenses.
 def estimate_true_monthly_cost(
     campus_id: str, rent: float, roommates: int = 0,
-    commute: str = "bus", month: Optional[str] = None
+    commute: str = "bus", month: Optional[str] = None,
+    *, bedrooms: Optional[int] = None
 ) -> dict:
     """Return items, total low/expected/high, and generic confidence.
 
     Rent is whole-apartment monthly rent supplied by the caller.
     Required data:
-      monthly_cost_config.bedrooms: bedroom count used for utilities
+      bedrooms: per-apartment keyword input; zero means studio.
+        Legacy monthly_cost_config.bedrooms is accepted if already present.
       monthly_cost_config.basis: rent/internet/renters_insurance/groceries
         each marked 'household' (equal split) or 'per_person'
       monthly_cost_ranges: internet/renters_insurance/groceries ranges
@@ -348,9 +353,13 @@ def estimate_true_monthly_cost(
     config = data.get('monthly_cost_config')
     if not isinstance(config, dict):
         raise ValueError('Missing monthly_cost_config: provide bedrooms and cost basis/sharing rules in the campus data file')
-    bedrooms = config.get('bedrooms')
-    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms <= 0:
-        raise ValueError('Missing or invalid monthly_cost_config.bedrooms: require a positive integer')
+    if bedrooms is None:
+        bedrooms = config.get('bedrooms')
+    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms < 0:
+        raise ValueError('Missing or invalid bedrooms: supply the apartment bedroom count; zero means studio')
+    sharing_occupants = config.get('sharing_occupants')
+    if roommates and sharing_occupants is not None and roommates + 1 != sharing_occupants:
+        raise ValueError('Sharing is approved only for the configured number of occupants')
     basis = config.get('basis')
     if not isinstance(basis, dict):
         raise ValueError('Missing monthly_cost_config.basis: provide household or per_person for each recurring cost')
@@ -388,4 +397,5 @@ def estimate_true_monthly_cost(
     return {
         'items': items, 'total': total, 'confidence': 'generic',
         'data_status': status,
+        'assumptions': data.get('monthly_cost_assumptions', ''),
     }
