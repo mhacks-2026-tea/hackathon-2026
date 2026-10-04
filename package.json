@@ -1,11 +1,12 @@
 {
-  "name": "hackathon-2026-nessie",
+  "name": "movin",
+  "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "engines": {
-    "node": ">=22"
-  },
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "tsx scripts/test-nessie.ts",
     "test:finance": "tsx scripts/test-finance.ts",
@@ -19,9 +20,26 @@
     "test:finance-server": "tsx scripts/test-finance-server.ts",
     "test:nessie-finance": "tsx scripts/test-nessie-finance.ts"
   },
+  "dependencies": {
+    "lucide-react": "^1.51.0",
+    "next": "16.3.8",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "recharts": "^3.10.1"
+  },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^22.0.0",
-    "tsx": "^4.0.0",
-    "typescript": "^5.0.0"
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.8",
+    "tailwindcss": "^4",
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
   }
 }

@@ -1,9 +1,8 @@
 /** Server-side campus estimates. Source values remain in data/ JSON and CSV files. */
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 
-export const DATA_DIR = fileURLToPath(new URL('../data/', import.meta.url));
+export const DATA_DIR = join(process.cwd(), 'data');
 export const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 type Data = Record<string, unknown>;
 export type CostRange = { low: number; expected: number; high: number };

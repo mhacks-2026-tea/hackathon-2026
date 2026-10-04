@@ -258,3 +258,16 @@ Local tests and the live ASI:One-to-Nessie evaluation passed. Agentverse lists
 `@movin-housing` as Active and ASI Available; its ACP manifest is published.
 The live link is in `agents/fetch/README.md`. This is a fictional demo account,
 not a personal-bank login or a public multi-user banking endpoint.
+# Movin frontend demo
+
+`feature/frontend` combines the original university-themed Movin UI with main's finance, Nessie, campus, and agent modules. Run `npm install`, `npm run build`, and `npm start` (or `npm run dev`). Overview, Housing, Ask Movin, and Neighborhoods retain the horizontal navigation and original school backgrounds/marks. The selected apartment is kept across pages for follow-up questions.
+
+The Next server endpoint `/api/movin` reuses the finance engine; React only gathers inputs and renders results. GET loads a university's dashboard. POST accepts `{ campus, query: { monthlyRent, roommates, utilities?, parking?, leaseStart? } }`; add `action: "ask"` and `question` for the finance agent. Financial profiles, account IDs, and credentials stay on the server.
+
+Default `MOVIN_DATA_MODE=alex-demo` uses explicit fictional Alex inputs in `lib/server/demo-profile.ts`, with a summer income gap. All displayed financial outputs are calculated, never preset replies. Set `MOVIN_DATA_MODE=nessie` and configure `.env.local` using `.env.example` to load the fixed Nessie sandbox customer. Configured Nessie failures are displayed rather than replaced by demo data. Set explicit future cash flows using `MOVIN_CASH_FLOWS_FILE` and exclude bills replaced by the proposed lease using `FINANCE_EXCLUDED_BILL_IDS`; historical income is never silently treated as a guaranteed future paycheck.
+
+Michigan uses the supplied campus dataset (which itself labels costs as placeholders). Other campuses use clearly disclosed sample costs. Properties, photos, and university-housing prices are representative samples. Monthly rent and utilities represent the whole apartment, divided among occupants; parking is the student's own cost. Move-in defaults are one rent-share deposit, $50 application fee, and $150 moving cost. The lease defaults to the day after the financial snapshot, ending 365 days after that snapshot; custom dates must fit the backend's 366-day forecast limit. The chart plots each month's lowest daily balance so paydays do not conceal risk. Historical monthly averages can differ from modeled future income.
+
+Ask Movin uses the existing finance agent's offline question interpretation and calculated tools; it is not a connected generative chat service. Demo login does not create or authenticate real accounts. This app serves a fixed sandbox demo account, not personal banking access.
+
+Validation: `npm run typecheck`, `npm run lint`, `npm run build`, `npm run test:all`; with the app running, `node scripts/test-movin.ts` exercises the full server flow. On hosts that block subprocesses, backend `.ts` checks without parameter properties can run directly with Node 24; the remaining checks can be transpiled with TypeScript before running. Next is configured to use build worker threads for that environment.
