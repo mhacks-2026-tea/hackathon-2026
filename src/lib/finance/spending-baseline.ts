@@ -1,4 +1,4 @@
-import type { FinancialProfile, SpendingForecast } from "./types";
+import type { FinancialProfile, SpendingForecast } from "./types.ts";
 import { summarizeFinances } from "./financial-summary.ts";
 
 /** UTC arithmetic keeps calendar days independent of daylight-saving changes. */

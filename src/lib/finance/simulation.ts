@@ -1,4 +1,4 @@
-import type { FinancialProfile, HousingScenario, SimulationResult } from "./types";
+import type { FinancialProfile, HousingScenario, SimulationResult } from "./types.ts";
 import { evaluateAffordability } from "./affordability.ts";
 import { predictBaselineSpending } from "./spending-baseline.ts";
 

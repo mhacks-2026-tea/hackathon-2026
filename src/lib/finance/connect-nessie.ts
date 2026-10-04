@@ -1,4 +1,4 @@
-import type { HousingScenario } from "./types";
+import type { HousingScenario } from "./types.ts";
 import type { NessieAdapterInput, NessieAdapterOptions } from "./nessie-adapter.ts";
 import { adaptNessieData } from "./nessie-adapter.ts";
 import type { AffordabilityOptions } from "./affordability.ts";

@@ -3,7 +3,7 @@ import type {
   FinancialProfile,
   ISODate,
   SpendingForecast,
-} from "./types";
+} from "./types.ts";
 
 /** Calendar arithmetic uses UTC to avoid daylight-saving offsets. */
 const DAY_MS = 86_400_000;

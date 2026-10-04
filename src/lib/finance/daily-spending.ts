@@ -1,4 +1,4 @@
-import type { FinancialProfile, ISODate, MoneyCents } from "./types";
+import type { FinancialProfile, ISODate, MoneyCents } from "./types.ts";
 import { summarizeFinances } from "./financial-summary.ts";
 
 /** One observed day, including days with no variable purchases. */

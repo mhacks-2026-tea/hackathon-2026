@@ -1,4 +1,4 @@
-import type { FinancialProfile, ISODate, ScheduledCashFlow, Transaction } from "./types";
+import type { FinancialProfile, ISODate, ScheduledCashFlow, Transaction } from "./types.ts";
 import { summarizeFinances } from "./financial-summary.ts";
 
 /** Structural input contract: accepts Haarun's output without importing his files. */

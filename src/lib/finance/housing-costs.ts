@@ -1,4 +1,4 @@
-import type { HousingScenario, MoneyCents } from "./types";
+import type { HousingScenario, MoneyCents } from "./types.ts";
 
 /** Total monthly housing expenses for the student's share, in cents. */
 export function calculateMonthlyHousingCost(

@@ -1,4 +1,4 @@
-import type { FinancialProfile, ISODate, MoneyCents } from "./types";
+import type { FinancialProfile, ISODate, MoneyCents } from "./types.ts";
 
 /** Historical totals for one observed calendar month, in cents. */
 export interface MonthlyFinancialSummary {

@@ -1,4 +1,4 @@
-import type { AffordabilityResult, FinancialProfile, HousingScenario, SpendingForecast } from "./types";
+import type { AffordabilityResult, FinancialProfile, HousingScenario, SpendingForecast } from "./types.ts";
 import { calculateMonthlyHousingCost, calculateUpfrontCashRequired } from "./housing-costs.ts";
 import { buildHousingSchedule } from "./housing-schedule.ts";
 import { predictBaselineSpending } from "./spending-baseline.ts";

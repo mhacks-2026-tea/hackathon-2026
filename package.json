@@ -6,6 +6,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "tsx scripts/test-nessie.ts",
+    "test:finance": "tsx scripts/test-finance.ts",
     "check:nessie": "node --env-file=.env.local --import tsx scripts/check-nessie.ts"
   },
   "devDependencies": {

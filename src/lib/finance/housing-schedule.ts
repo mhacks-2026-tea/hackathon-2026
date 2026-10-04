@@ -1,4 +1,4 @@
-import type { HousingScenario, ISODate, ScheduledCashFlow } from "./types";
+import type { HousingScenario, ISODate, ScheduledCashFlow } from "./types.ts";
 import { calculateMonthlyHousingCost, calculateUpfrontCashRequired } from "./housing-costs.ts";
 
 /** Return a valid UTC calendar date, rejecting impossible dates. */
