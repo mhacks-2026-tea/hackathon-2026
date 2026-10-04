@@ -242,6 +242,39 @@ class DataAcceptanceTests(unittest.TestCase):
         for name in records.keys() - expected.keys():
             self.assertTrue(all(records[name][column] == '' for column in columns), name)
 
+    def test_actual_monthly_utility_midpoints_and_open_bounds(self):
+        # Exact input endpoints provided by the user; no prices invented.
+        monthly = [
+            ('january', [(230, 280), (330, 400), (470, 550)]),
+            ('february', [(220, 270), (320, 390), (450, 540)]),
+            ('march', [(170, 220), (240, 310), (340, 430)]),
+            ('april', [(110, 140), (150, 200), (210, 280)]),
+            ('may', [(80, 110), (120, 150), (160, 210)]),
+            ('june', [(120, 160), (170, 220), (240, 310)]),
+            ('july', [(150, 200), (210, 280), (300, 390)]),
+            ('august', [(140, 190), (200, 260), (280, 370)]),
+            ('september', [(100, 130), (140, 180), (190, 250)]),
+            ('october', [(90, 120), (130, 160), (170, 220)]),
+            ('november', [(140, 180), (200, 250), (280, 350)]),
+            ('december', [(200, 250), (290, 360), (410, 500)]),
+        ]
+        for month, groups in monthly:
+            for bedrooms, (low, upper) in enumerate(groups, start=1):
+                with self.subTest(month=month, bedrooms=bedrooms):
+                    result = loader.estimate_utilities('umich', month, bedrooms, 0)
+                    self.assertEqual(result['low'], low)
+                    self.assertEqual(result['expected'], (low + upper) / 2)
+                    self.assertEqual(result['high'],
+                                     None if month in ('january', 'february', 'december') else upper)
+        self.assertEqual(loader.estimate_utilities('umich', 'january', 0, 0),
+                         loader.estimate_utilities('umich', 'january', 1, 0))
+        self.assertEqual(loader.estimate_utilities('umich', 'january', 4, 0),
+                         loader.estimate_utilities('umich', 'january', 3, 0))
+
+    def test_actual_utility_shares_are_not_assumed(self):
+        with self.assertRaisesRegex(ValueError, 'shares are user-defined'):
+            loader.estimate_utilities('umich', 'january', 1, 1)
+
     def test_actual_low_budget_returns_empty(self):
         self.assertEqual(loader.find_neighborhoods_in_budget('umich', 0, 1, 0), [])
 
