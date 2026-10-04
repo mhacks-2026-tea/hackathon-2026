@@ -1,6 +1,8 @@
-# hackathon-2026 — Nessie integration
+# hackathon-2026
 
-Server-side TypeScript integration on `feature/nessie`. This branch only fetches and normalizes Nessie banking data. No UI, campus data, financial calculations, or AI prompts.
+## Nessie integration
+
+The server-side TypeScript integration fetches and normalizes Nessie banking data for the finance agent.
 
 ## Setup
 
@@ -82,109 +84,80 @@ Live compatibility notes: current Nessie records use UUIDs; validation accepts t
 
 Reference: [Nessie JavaScript SDK](https://github.com/nessieisreal/nessie-javascript-sdk) and [Nessie Python SDK](https://github.com/nessieisreal/nessie-python-sdk) for endpoint and field mappings.
 
+
 ---
 
-# UMich campus data
+# UMich campus estimates
 
-Offline campus data and cost helpers available on `main` and `feature/campus-data`.
-Requires Python 3.10+; no third-party packages.
+Offline data and Python helpers for Movin. Requires Python 3.10+ and no third-party packages.
 
-Run this example from the repository root:
+## Supported scope
+
+- Five areas with supplied rent ranges: Kerrytown, Burns Park, Oxbridge, Glazier Way / North Side, and Downtown/Campus.
+- Whole-apartment and shared per-person ranges for one, two, and three-plus bedrooms.
+- Seasonal apartment utility estimates excluding internet, with studio using the one-bedroom utility group.
+- Internet, renters insurance, and groceries under the recorded modeling assumptions.
+- Walking/biking cost assumptions and bus fares for eligible U-M students.
+- Populated campus identity and supplied academic dates.
+
+Commute times and commute filtering have been removed. Areas without rent data and empty median columns are removed. Campus defaults for deposits, application fees, parking, driving costs, lease-start windows, county, and summer income gaps are removed. Generic rent averages with unspecified sharing basis and overlapping utility averages are also removed.
+
+Listing-specific move-in costs belong in the finance engine using actual user inputs. Removing campus estimates does not mean those expenses are zero. Monthly totals below cover only the returned items; they are not a complete housing affordability forecast.
+
+## Examples
 
 ```python
 from campus.loader import (
-    estimate_true_monthly_cost,
-    find_neighborhoods_in_budget,
+    get_campus_profile, get_rent_benchmark,
+    find_neighborhoods_in_budget, estimate_true_monthly_cost,
 )
+
+print(get_campus_profile("umich"))
+print(get_rent_benchmark("umich", bedrooms=1))
+# {'low': 825.0, 'high': 2550.0}
+
+matches = find_neighborhoods_in_budget("umich", max_rent=1000, bedrooms=1)
+print([row.neighborhood for row in matches])
+# ['Oxbridge'] -- potential range overlap, not a confirmed listing
 
 cost = estimate_true_monthly_cost(
     "umich", rent=2600, roommates=1,
     commute="bus", month="january", bedrooms=2,
 )
-for name, value in cost["items"].items():
-    print(f"{name}: {value['expected']:.2f}")
-print("total:", cost["total"])
-print("confidence:", cost["confidence"])
-
-print(find_neighborhoods_in_budget(
-    "umich", max_rent=2800, bedrooms=2, max_commute_min=20,
-))
+print(cost["total"])
+# {'low': 1880.5, 'expected': 1910.5, 'high': 1940.5}
 ```
 
-Output:
+## Contract and assumptions
 
-```text
-rent: 1300.00
-utilities: 182.50
-internet: 32.50
-renters_insurance: 10.00
-groceries: 385.50
-commute: 0.00
-total: {'low': 1880.5, 'expected': 1910.5, 'high': 1940.5}
-confidence: generic
-[]
+`CampusProfile` contains `id`, `name`, `city`, `state`, `term_start_dates`, and `student_fare_notes`.
+
+`Neighborhood` contains `neighborhood`, `notes`, `source`, and `rent_ranges`. Range keys are `1`, `2`, `3_plus`, `shared_1`, `shared_2`, and `shared_3_plus`. Each has `low`, `high`, and `high_lower_bound`. An explicitly open price such as `4500+` retains `high=None` and `high_lower_bound=4500`; no finite maximum is invented. This is a supplied open range, not an empty data placeholder.
+
+`get_rent_benchmark` returns low/high across the available neighborhood ranges. It no longer returns a fabricated or empty median. An open upper range propagates as `high=None`.
+
+`find_neighborhoods_in_budget` accepts campus ID, maximum rent, bedroom count, and optional `shared=True`. A match means the supplied range starts within budget; a particular available listing may cost more. Shared prices are already per person and are not divided again. No travel time claim is made. Studio rent ranges are not supplied, so the rent helpers require at least one bedroom.
+
+`estimate_true_monthly_cost` takes whole-apartment rent. Its itemized output is per person. Equal sharing is approved only for two occupants; insurance is per person. Fixed groceries are a household modeling assumption. When integrating with transaction forecasts, avoid adding these groceries on top of predicted grocery spending.
+
+`estimate_commute_cost` supports only walk, bike, and bus. Walking/biking zero costs represent the supplied direct-travel assumptions, not equipment or maintenance budgets. Free bus fares apply only to eligible active U-M students with yellow MCard on TheRide fixed routes. The caller must check that eligibility before selecting bus.
+
+Costs are estimates, not guaranteed quotes. Utility modeling caps, fixed averages, and midpoint assumptions retain their labels. The existing generic confidence/placeholder status remains conservative; it is not independent verification of listing prices. Source notes and research dates are in `data/sources.md`.
+
+## API changes from the earlier draft
+
+- Removed `max_commute_min`, `commute_method`, and `commute_minutes` from neighborhood search.
+- Removed `estimate_move_in_cost` and campus deposit/fee defaults.
+- Removed car and supplied car-budget overrides from the campus helper.
+- Removed empty legacy profile and neighborhood fields.
+- Preserved existing supplied rent endpoints and supported cost assumptions.
+
+Earlier requirements in `data/docs/PRD-campus-data.md` are background; this README describes the current reduced scope.
+
+## Tests
+
+```sh
+python3 -m unittest discover -s tests -v
 ```
 
-Costs are per person. Each total equals the sum of its corresponding
-line items. Household costs split 50/50 for two occupants; insurance
-is per person. Utilities exclude internet.
-
-Fixed averages, midpoints, and utility modeling caps are user-approved
-assumptions, not guaranteed prices. The result still carries
-`data_status: placeholder`.
-
-Commute times depend on traffic and location. The filter currently has
-no matches; commute minutes and rent medians are not populated. Supplied
-bedroom-specific ranges are stored in the CSV, but the rent helpers
-still read median columns. Car ranges and typical move-in fees/deposit
-also remain incomplete.
-
-Sources and research dates are in `data/sources.md`. Links are optional;
-recorded source names do not imply independent verification.
-
-Run tests:
-
-```bash
-python -m unittest discover -s tests -v
-```
-
-Current result: 26 tests pass. Passing tests do not mean every PRD
-requirement or data field is complete.
-
-## Movin integration and cost definitions
-
-The Python helpers read local files in `data/`; they make no runtime network calls. `main` includes the campus code, data, source log, and campus tests.
-
-| Cost | Input basis | Current calculation |
-| --- | --- | --- |
-| Rent | Whole apartment, supplied by student | Divide 50/50 for two occupants |
-| Utilities | Apartment estimate by month and bedroom group; excludes internet | Divide 50/50 for two occupants |
-| Internet | Household range 40–90; approved expected value 65 | Divide 50/50 for two occupants |
-| Groceries | Approved fixed household budget 771 | 385.50 per person for two occupants |
-| Renters insurance | Approved fixed assumption 10 per person | Not divided |
-| Walk/bike | User-reported zero travel cost | Equipment/maintenance not separately established |
-| Bus | Zero for eligible active U-M students with yellow MCard on TheRide fixed routes | Do not apply to ineligible riders |
-| Car | Reported transportation average 345 | Helper lacks a complete car range; parking coverage is unconfirmed |
-| Deposit/application fee | One-time costs | Actual amounts remain missing; legal caps are not typical costs |
-
-Midpoints, fixed averages, and utility caps are approved modeling assumptions. The original `+` upper prices are not guaranteed limits. `confidence="generic"` describes a local estimate, not a verified listing quote; `data_status="placeholder"` means unresolved data remains. Books/supplies are for the supplied academic period, not a monthly line item.
-
-### Available data and rent-helper gap
-
-The CSV contains bedroom-specific total rent ranges and estimated shared per-person ranges for five priced areas; four other areas retain empty ranges. Preserve all supplied endpoints, rounding, and open-ended `+` prices. Do not invent medians or divide an already per-person shared rent a second time.
-
-**Current limitation:** `get_rent_benchmark` and `find_neighborhoods_in_budget` still read the empty median columns, not the populated range columns. Their current empty output must not be presented as proof that no affordable neighborhood exists. Matching these helpers to the range schema is remaining integration work; this documentation update does not implement that change.
-
-### Missing data: ask the student
-
-Commute times depend on traffic and location. They are currently empty in the CSV. Movin should ask for the apartment location, campus destination, travel method, and expected commute time before claiming a match.
-
-The move-in helper currently computes with zero deposit/application placeholders and labels its result as placeholder. **Do not present that total as a complete move-in estimate or those zeros as free fees.** Ask for the listing's actual deposit, application fee, and other move-in charges. The supplied deposit range, legal deposit ceiling, and application-fee cap are separate facts, not replacement typical values.
-
-Ask for apartment rent, bedroom count (`bedrooms=0` for studio), roommate count, month, and transport method. Only two-occupant 50/50 sharing is approved; other roommate arrangements need their own shares. Catch missing-data `ValueError` exceptions and surface the missing input in Movin instead of inserting a fabricated value.
-
-No further research is required to begin integration: use the available monthly estimate, retain assumption labels, and ask for unresolved listing-specific details. Rent-range-aware helpers and richer missing-data returns remain to be implemented.
-
-### Verification limits
-
-Run `python -m unittest discover -s tests -v` from the repository root. The 26 passing tests cover current behavior, supplied data, approved sharing assumptions, and itemized totals. They do not prove that range-based neighborhood filtering, complete move-in costs, car estimates, or every PRD criterion is finished.
+27 tests cover the current scope, supplied rent endpoints, cost sums, sharing rules, validation, and removal of unsupported features. Tests do not verify source prices against live listings.

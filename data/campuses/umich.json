@@ -2,28 +2,8 @@
   "university": "University of Michigan",
   "city": "Ann Arbor",
   "state": "Michigan",
-  "monthly_utilities_by_month": {
-    "january": 0,
-    "february": 0,
-    "march": 0,
-    "april": 0,
-    "may": 0,
-    "june": 0,
-    "july": 0,
-    "august": 0,
-    "september": 0,
-    "october": 0,
-    "november": 0,
-    "december": 0
-  },
-  "internet": 0,
   "renters_insurance": 10,
   "groceries": 771,
-  "security_deposit_months": 0,
-  "application_fee": 0,
-  "parking": 0,
-  "bus_pass": 0,
-  "summer_income_gap_months": 0,
   "monthly_utility_averages": {
     "electric": 202,
     "water": 28,
@@ -40,8 +20,6 @@
     "start": "2026-10-19",
     "end": "2026-10-20"
   },
-  "security_deposit_legal_max_months": 1.5,
-  "security_deposit_notes": "Legal ceiling, not the typical deposit. First month's rent is not part of the security deposit.",
   "student_fare_notes": "Active students with a yellow MCard have unlimited access to TheRide's fixed-route buses because U-M pays the fares.",
   "commute_cost_ranges": {
     "bus": {
@@ -63,25 +41,9 @@
   "commute_cost_eligibility": {
     "bus": "Active University of Michigan students with a yellow MCard; TheRide fixed-route buses."
   },
-  "rent_range": {
-    "low": 1200,
-    "high": 2500
-  },
-  "rent_range_notes": "User-provided typical range depending on apartment location and number of roommates; neighborhood, bedroom count, and per-apartment versus per-person basis not specified.",
-  "monthly_utilities_average": 360,
-  "monthly_utilities_average_basis": "Per apartment, as specified by user; roommates decide the split. Source utilities category includes internet/phone, so avoid double-counting separate internet until coverage is confirmed.",
   "internet_sharing": "User-approved 50/50 for two occupants.",
   "renters_insurance_basis": "Per roommate; user-reported average. Supplied Forbes URL is a car-insurance landing page and does not verify this renters-insurance amount.",
   "groceries_basis": "User-approved fixed two-person household budget; each occupant pays half.",
-  "car_transportation_average": 345,
-  "car_transportation_average_notes": "User-reported monthly car transportation average. Linked source lists a general renter transportation average; car-specific scope and whether parking is included are not established.",
-  "application_fee_legal_max": 50,
-  "application_fee_legal_max_notes": "Ann Arbor ordinance ORD-24-33 cap; not a typical fee. The ordinance lists exemptions and applies to covered leases.",
-  "security_deposit_range": {
-    "low": 200,
-    "high": 500
-  },
-  "security_deposit_range_notes": "User-reported dollar range from Rambler Ann Arbor; not months of rent and not a city-wide legal limit. Roommates typically split this cost; shares unspecified.",
   "commute_cost_notes": {
     "walk": "User reports free.",
     "bike": "User reports free; equipment/maintenance not specified.",
@@ -94,12 +56,9 @@
   "books_and_supplies_period": "August 2026 to April 2027",
   "id": "umich",
   "name": "University of Michigan",
-  "county": "",
   "term_start_dates": {
     "winter": "2027-01-13"
   },
-  "typical_lease_start_window": {},
-  "metadata_notes": "County and typical lease start window are not provided; empty values are explicit placeholders. Winter start uses the date and academic period supplied by the user.",
   "utility_ranges_by_month": {
     "january": {
       "1": {
