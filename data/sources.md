@@ -269,3 +269,31 @@ Source: Wise.com. Date found: 2026-10-03. Specific page not supplied; URL is opt
 | umich.utility_ranges_by_month.december.3_plus.low | 410 | Reported endpoint | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
 | umich.utility_ranges_by_month.december.3_plus.expected | 455 | User-authorized midpoint of supplied endpoints | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
 | umich.utility_ranges_by_month.december.3_plus.high_lower_bound | 500 | Reported open-ended upper threshold; not a ceiling | Wise.com (user-provided table) | Not provided | 2026-10-03 | Not independently verified |
+
+## User-approved modeling assumptions (2026-10-03)
+
+Equal 50/50 sharing applies to two occupants for household rent, utilities, internet and the corrected household grocery budget. Insurance remains per-person. Bedroom count is an apartment input, not a school-wide fixed value. These assumptions supplement the original sources; they do not claim new measurements. Original open-ended utility highs now use the displayed endpoint as a modeling cap by explicit user instruction; the original threshold remains stored. Fixed insurance/grocery ranges reflect approved modeling assumptions, not observed low/high variability.
+
+| Field | Value | Meaning | Source | Source URL | Date found | Verification |
+| --- | --- | --- | --- | --- | --- | --- |
+| umich.utility_sharing_occupants | 2 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.monthly_cost_config.sharing_occupants | 2 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.internet_range.expected | 65 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.monthly_cost_ranges.internet.low | 40 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.monthly_cost_ranges.internet.expected | 65 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.monthly_cost_ranges.internet.high | 90 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.monthly_cost_ranges.renters_insurance.low | 10 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.monthly_cost_ranges.renters_insurance.expected | 10 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.monthly_cost_ranges.renters_insurance.high | 10 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.monthly_cost_ranges.groceries.low | 771 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.monthly_cost_ranges.groceries.expected | 771 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.monthly_cost_ranges.groceries.high | 771 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.utility_ranges_by_month.january.1.high | 280 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.utility_ranges_by_month.january.2.high | 400 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.utility_ranges_by_month.january.3_plus.high | 550 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.utility_ranges_by_month.february.1.high | 270 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.utility_ranges_by_month.february.2.high | 390 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.utility_ranges_by_month.february.3_plus.high | 540 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.utility_ranges_by_month.december.1.high | 250 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.utility_ranges_by_month.december.2.high | 360 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
+| umich.utility_ranges_by_month.december.3_plus.high | 500 | Explicit user-approved assumption; original source values remain separately logged | User instruction | Not provided | 2026-10-03 | Modeling choice, not independent verification |
