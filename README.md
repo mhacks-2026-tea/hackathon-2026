@@ -228,3 +228,33 @@ const response = await runFinanceAgent({
 Only the question goes to the model; the interpreter classifies intent and horizon. Financial numbers are supplied as structured context and calculated by the engine. Explanations use actual tool outputs, including warnings and assumptions. Without an injected interpreter, a documented keyword parser supports offline demos; that fallback is not an LLM. This is a server-side library entry point, not a deployed chat UI or API route. Amounts in conversational follow-ups must be confirmed and converted into structured cent fields by the caller.
 
 Verification: `npm run test:spending-agent` (included in `test:all`). Synthetic 84-day weekday data yielded baseline MAE $16.00/day versus learned MAE $3.80/day (76.25% reduction) across 56 held-out days; constant spending tied at zero error and retained baseline. These are synthetic behavior checks, not measured performance on student banking history. Live model-provider behavior has not been verified; tests use a mock completion.
+
+
+## Local Fetch bridge backend (first integration step)
+
+`npm run serve:finance` runs a loopback-only Node service at port 3101.
+Set `MOVIN_BRIDGE_TOKEN` to a random secret of at least 32 characters in private
+`.env.local`, along with the existing Nessie settings, `FINANCE_HISTORY_START`,
+and `FINANCE_AS_OF_DATE`. The existing demo snapshot date is 2026-10-03.
+Keep this token server-side; it belongs to the ACP bridge, not browser code.
+
+`POST /api/demo/affordability` requires `Authorization: Bearer <MOVIN_BRIDGE_TOKEN>`
+and JSON `{ "housing": CampusHousingRequest, "safetyBufferCents": number,
+"excludedBillIds": string[] }`. The exclusions are optional and must explicitly
+identify existing bills replaced by the proposal. A body cannot select a customer
+or account: this service uses only the configured fictional sandbox account.
+
+The response contains `affordability`, `predictionMethod`, `evaluation`,
+`dataWarnings`, `toolCalls`, and a sandbox label. It uses campus estimates and the
+selected spending predictor. It does not infer future paychecks. Return warnings
+and assumptions to users; short history makes forecasts provisional.
+Missing fields return 422 with `missingFields`; unavailable banking returns 502.
+Use `npm run test:finance-server` for HTTP tests with synthetic banking data.
+
+The endpoint accepts structured inputs from `agents/fetch/bridge.py`. That bridge
+implements ACP, uses ASI to extract stated apartment details, and collects missing
+fields across messages. See `agents/fetch/README.md` for startup instructions.
+Local tests and the live ASI:One-to-Nessie evaluation passed. Agentverse lists
+`@movin-housing` as Active and ASI Available; its ACP manifest is published.
+The live link is in `agents/fetch/README.md`. This is a fictional demo account,
+not a personal-bank login or a public multi-user banking endpoint.

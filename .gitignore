@@ -5,3 +5,4 @@ node_modules/
 # Python test/runtime caches.
 __pycache__/
 *.pyc
+.venv-fetch/
