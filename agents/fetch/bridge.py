@@ -35,31 +35,39 @@ def call_finance(payload: dict) -> dict:
 
 def money(cents: int) -> str:
     """Format engine cents without recalculating any financial conclusions."""
-    return f"${cents / 100:,.2f}"
+    return f"{'−' if cents < 0 else ''}${abs(cents) / 100:,.2f}"
 
 
-def format_result(result: dict) -> str:
-    """Report computed values and their caveats; do not invent an affordability score."""
+def format_result(result: dict, details: bool = False) -> str:
+    """Show a short forecast first; expand the engine's caveats only on request."""
     finance = result["affordability"]
     balances = finance["dailyBalances"]
     lowest = min(balances, key=lambda day: day["projectedBalanceCents"])
     below = next((day for day in balances if day["belowSafetyBuffer"]), None)
-    lines = [
-        f"Fictional sandbox account — snapshot {result['snapshotDate']}.",
-        f"Housing per month (lease-start month): {money(finance['monthlyHousingCostCents'])}.",
-        f"Upfront cash, including first rent: {money(finance['upfrontCashRequiredCents'])}.",
-        f"Lowest projected balance: {money(lowest['projectedBalanceCents'])} on {lowest['date']}.",
-        (f"First day below your safety buffer: {below['date']}." if below
-         else "The forecast stays at or above your safety buffer."),
-        f"Spending prediction used: {result['predictionMethod']}.",
-    ]
-    # Preserve limited-history and other warnings, including the seeded balance caveat.
     notes = finance["assumptions"] + finance["warnings"] + result.get("dataWarnings", [])
-    lines.extend(f"• {note}" for note in dict.fromkeys(notes))
-    return "\n".join(lines)
+    if details:
+        return "**Forecast assumptions and warnings**\n\n" + "\n".join(f"- {note}" for note in dict.fromkeys(notes))
+    # Describe the actual forecast outcome rather than claiming guaranteed affordability.
+    headline = ("This apartment would leave the demo account short of cash."
+                if lowest["projectedBalanceCents"] < 0 else
+                "This apartment would dip below your safety buffer." if below else
+                "This forecast stays above your safety buffer.")
+    lines = [
+        f"- Monthly housing (lease-start month): **{money(finance['monthlyHousingCostCents'])}**",
+        f"- Upfront cash, including first rent: **{money(finance['upfrontCashRequiredCents'])}**",
+        f"- Lowest predicted balance: **{money(lowest['projectedBalanceCents'])}** on {lowest['date']}",
+    ]
+    if below:
+        lines.append(f"- Below your buffer starting **{below['date']}**")
+    short_history = any("less than 28" in note.lower() or "limited history" in note.lower() for note in notes)
+    caveat = " Limited spending history makes this estimate provisional." if short_history else " Forecasts are estimates."
+    footer = (f"Fictional account; seeded balance snapshot {result['snapshotDate']}. "
+              f"Prediction: {result['predictionMethod']}.{caveat} "
+              "Future income and recurring bills are included only when explicitly scheduled.")
+    return f"**{headline}**\n\n" + "\n".join(lines) + "\n\n" + footer + "\n\nReply **details** for all assumptions and warnings."
 
 
-async def reply(text: str, fetch=call_finance) -> str:
+async def reply(text: str, fetch=call_finance, details: bool = False) -> str:
     """Testable message boundary: malformed requests never invoke banking tools."""
     if len(text.encode()) > 16_384:
         return "Request too large. Send one apartment at a time."
@@ -72,7 +80,7 @@ async def reply(text: str, fetch=call_finance) -> str:
     try:
         # urllib is blocking, so keep it off the agent's event loop.
         result = await asyncio.to_thread(fetch, payload)
-        return format_result(result)
+        return format_result(result, details=details)
     except HTTPError as error:
         if error.code == 422:
             # The backend's validation messages are deliberately safe to show.

@@ -45,8 +45,13 @@ class BridgeTests(unittest.IsolatedAsyncioTestCase):
                 },
             }
         response = await reply('{"housing": {}}', finance)
-        for expected in ["$1,230.00", "$2,480.00", "$-698.00", "baseline", "seeded", "Limited history"]:
+        for expected in ["$1,230.00", "$2,480.00", "−$698.00", "baseline", "seeded", "provisional"]:
             self.assertIn(expected, response)
+        self.assertNotIn("•", response)
+        self.assertNotIn("Limited history.", response)
+        expanded = await reply('{"housing": {}}', finance, details=True)
+        self.assertIn("Limited history.", expanded)
+        self.assertIn("Balance is a seeded snapshot.", expanded)
 
     async def test_internal_error_is_private(self):
         def broken(payload):

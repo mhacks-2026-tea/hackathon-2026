@@ -4,10 +4,13 @@ import json
 import math
 import os
 import time
+import logging
+import re
 from collections import OrderedDict
 from datetime import date
 from pathlib import Path
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
 # Explicit zeros are required: an unknown expense is never assumed free.
 FIELDS = {
@@ -50,13 +53,16 @@ def validate_patch(value):
         else:
             if isinstance(item, bool) or not isinstance(item, (int, float)) or not math.isfinite(item) or item < 0:
                 raise ValueError("Invalid amount")
-            if key != "monthlyApartmentRentDollars" and (not isinstance(item, int) or item > 2**53 - 1):
-                raise ValueError("Expected integer")
+            if key != "monthlyApartmentRentDollars":
+                # JSON may encode exact cents as 5000.0; accept only whole values.
+                if item > 2**53 - 1 or int(item) != item:
+                    raise ValueError("Expected integer")
+                item = int(item)
         clean[key] = item
     return clean
 
 
-def extract_inputs(text, known):
+def _extract_once(text, known):
     """Send approved apartment inputs to ASI; never include banking data or other secrets."""
     key = os.environ.get("ASI1_API_KEY", "")
     if not key:
@@ -85,6 +91,21 @@ def extract_inputs(text, known):
     return validate_patch(json.loads(content))
 
 
+def extract_inputs(text, known):
+    """Retry one temporary API or malformed-output failure; never retry invalid credentials."""
+    for attempt in range(2):
+        try:
+            return _extract_once(text, known)
+        except HTTPError as error:
+            if attempt or error.code not in (408, 429, 500, 502, 503, 504):
+                raise
+        except (URLError, TimeoutError, ValueError, KeyError, TypeError, AttributeError):
+            if attempt:
+                raise
+        # Bounded backoff gives a briefly busy service time to recover.
+        time.sleep(0.5)
+
+
 class Conversation:
     """Isolate chat state by sender and ACP session, with expiry and a memory limit."""
     def __init__(self, extract=extract_inputs):
@@ -95,6 +116,8 @@ class Conversation:
         self.campuses = {path.stem for path in root.glob("*.json")}
 
     async def respond(self, session, text, execute):
+        # ASI may retain the leading recipient mention; commands refer to the text after it.
+        text = re.sub(r"^\s*@(?:agent1[a-z0-9]+|movin-housing)\s+", "", text, count=1).strip()
         now = time.monotonic()
         for key in list(self.sessions):
             if now - self.sessions[key]["updated"] > 600 and not self.sessions[key]["lock"].locked():
@@ -108,7 +131,13 @@ class Conversation:
             state["updated"] = time.monotonic()
             if text.strip().lower() in ("reset", "start over"):
                 state["known"] = {}
+                state.pop("last_payload", None)
                 return "Started over. Which school and what apartment rent? This uses a fictional banking account."
+            # Re-evaluate the saved scenario on explicit detail requests, without another LLM call.
+            if text.strip().lower() in ("details", "assumptions", "show details", "show assumptions"):
+                if "last_payload" not in state:
+                    return "First evaluate an apartment, then ask for details."
+                return await execute(state["last_payload"], details=True)
             if len(text.encode()) > 16384:
                 return "Please send a shorter apartment description."
             # Structured input remains available when ASI is offline.
@@ -117,12 +146,17 @@ class Conversation:
             except ValueError:
                 structured = None
             if isinstance(structured, dict) and isinstance(structured.get("housing"), dict):
+                state["last_payload"] = text
                 return await execute(text)
             try:
                 patch = await asyncio.to_thread(self.extract, text, dict(state["known"]))
                 state["known"].update(validate_patch(patch))
-            except Exception:
-                return "I couldn't read that with ASI. Earlier details are saved; please retry or send the structured demo request."
+            except Exception as error:
+                # Log only type/status so diagnostics never expose input or credentials.
+                logging.getLogger(__name__).warning("ASI extraction failed: %s status=%s", type(error).__name__, getattr(error, "code", "n/a"))
+                if isinstance(error, HTTPError) and error.code in (401, 402, 403):
+                    return "The ASI service needs an API-key or account-access check. Your earlier apartment details are saved."
+                return "ASI is temporarily having trouble reading this. Your earlier details are saved—please resend this last message."
             known = state["known"]
             if known.get("campusId") == "michigan":
                 known["campusId"] = "umich"
@@ -136,4 +170,5 @@ class Conversation:
             # Fixed campus/name are disclosed demo metadata, not inferred financial facts.
             housing = {key: value for key, value in known.items() if key != "safetyBufferCents"}
             housing.update(name="Apartment from ASI conversation")
-            return await execute(json.dumps({"housing": housing, "safetyBufferCents": known["safetyBufferCents"]}))
+            state["last_payload"] = json.dumps({"housing": housing, "safetyBufferCents": known["safetyBufferCents"]})
+            return await execute(state["last_payload"])
