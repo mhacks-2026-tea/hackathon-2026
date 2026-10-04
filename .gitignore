@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+!.env.example
+__pycache__/
+*.pyc
+.venv-fetch/
+
+.npm-cache/
+
+.verify/
+verify.mjs

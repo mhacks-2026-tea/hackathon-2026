@@ -243,12 +243,13 @@ export function ListingCards({
   useEffect(() => {
     let active = true;
     async function loadListings() {
+      setIsLoading(true);
       try {
         const listings = await getListings(campus.id, {
           propertyType: isListingPropertyType(propertyType) ? propertyType : undefined,
         });
         if (active) {
-          setItems(getListingEstimates(listings, campus.id));
+          setItems(await getListingEstimates(listings, campus.id));
           setError(null);
         }
       } catch (reason: unknown) {

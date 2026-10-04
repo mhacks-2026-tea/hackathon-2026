@@ -1,11 +1,12 @@
 import { campusProfiles } from "@/lib/mock-data";
-import { estimateListingAffordability, getCampusProfile } from "@/lib/frontend/campus-data";
+import { getCampusProfile } from "@/lib/frontend/campus-data";
 import type {
   CampusId,
   Listing,
   ListingFilters,
   ListingProvider,
 } from "@/lib/frontend/campus-types";
+import { estimateHousingScenario } from "@/lib/data/dashboard";
 import type { AffordabilityResult } from "@/lib/types";
 
 export interface ListingWithEstimate {
@@ -70,13 +71,6 @@ export function getSimilarListings(listingId: string): Promise<Listing[]> {
   return listingProvider.getSimilarListings(listingId);
 }
 
-export function getListingEstimates(
-  listings: Listing[],
-  campusId: CampusId,
-): ListingWithEstimate[] {
-  const profile = getCampusProfile(campusId);
-  return listings.map((listing) => ({
-    listing,
-    estimate: estimateListingAffordability(listing, profile),
-  }));
+export async function getListingEstimates(listings: Listing[], campusId: CampusId): Promise<ListingWithEstimate[]> {
+  return Promise.all(listings.map(async listing => ({ listing, estimate: (await estimateHousingScenario({ monthlyRent: listing.rent, roommates: 0 }, { campus: getCampusProfile(campusId) })).result })));
 }

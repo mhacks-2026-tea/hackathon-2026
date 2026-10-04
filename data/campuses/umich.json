@@ -1,0 +1,322 @@
+{
+  "university": "University of Michigan",
+  "city": "Ann Arbor",
+  "state": "Michigan",
+  "renters_insurance": 10,
+  "groceries": 771,
+  "monthly_utility_averages": {
+    "electric": 202,
+    "water": 28,
+    "sewer": 50
+  },
+  "internet_range": {
+    "low": 40,
+    "high": 90,
+    "expected": 65
+  },
+  "books_and_supplies": 1200,
+  "winter_semester_start": "2027-01-13",
+  "fall_break": {
+    "start": "2026-10-19",
+    "end": "2026-10-20"
+  },
+  "student_fare_notes": "Active students with a yellow MCard have unlimited access to TheRide's fixed-route buses because U-M pays the fares.",
+  "commute_cost_ranges": {
+    "bus": {
+      "low": 0,
+      "expected": 0,
+      "high": 0
+    },
+    "walk": {
+      "low": 0,
+      "expected": 0,
+      "high": 0
+    },
+    "bike": {
+      "low": 0,
+      "expected": 0,
+      "high": 0
+    }
+  },
+  "commute_cost_eligibility": {
+    "bus": "Active University of Michigan students with a yellow MCard; TheRide fixed-route buses."
+  },
+  "internet_sharing": "User-approved 50/50 for two occupants.",
+  "renters_insurance_basis": "Per roommate; user-reported average. Supplied Forbes URL is a car-insurance landing page and does not verify this renters-insurance amount.",
+  "groceries_basis": "User-approved fixed two-person household budget; each occupant pays half.",
+  "commute_cost_notes": {
+    "walk": "User reports free.",
+    "bike": "User reports free; equipment/maintenance not specified.",
+    "bus": "Free for eligible active U-M students with yellow MCard on TheRide fixed-route buses."
+  },
+  "academic_period": {
+    "start": "2026-08",
+    "end": "2027-04"
+  },
+  "books_and_supplies_period": "August 2026 to April 2027",
+  "id": "umich",
+  "name": "University of Michigan",
+  "term_start_dates": {
+    "winter": "2027-01-13"
+  },
+  "utility_ranges_by_month": {
+    "january": {
+      "1": {
+        "low": 230,
+        "expected": 255,
+        "high": 280,
+        "high_lower_bound": 280,
+        "high_is_modeling_cap": true
+      },
+      "2": {
+        "low": 330,
+        "expected": 365,
+        "high": 400,
+        "high_lower_bound": 400,
+        "high_is_modeling_cap": true
+      },
+      "3_plus": {
+        "low": 470,
+        "expected": 510,
+        "high": 550,
+        "high_lower_bound": 550,
+        "high_is_modeling_cap": true
+      }
+    },
+    "february": {
+      "1": {
+        "low": 220,
+        "expected": 245,
+        "high": 270,
+        "high_lower_bound": 270,
+        "high_is_modeling_cap": true
+      },
+      "2": {
+        "low": 320,
+        "expected": 355,
+        "high": 390,
+        "high_lower_bound": 390,
+        "high_is_modeling_cap": true
+      },
+      "3_plus": {
+        "low": 450,
+        "expected": 495,
+        "high": 540,
+        "high_lower_bound": 540,
+        "high_is_modeling_cap": true
+      }
+    },
+    "march": {
+      "1": {
+        "low": 170,
+        "expected": 195,
+        "high": 220
+      },
+      "2": {
+        "low": 240,
+        "expected": 275,
+        "high": 310
+      },
+      "3_plus": {
+        "low": 340,
+        "expected": 385,
+        "high": 430
+      }
+    },
+    "april": {
+      "1": {
+        "low": 110,
+        "expected": 125,
+        "high": 140
+      },
+      "2": {
+        "low": 150,
+        "expected": 175,
+        "high": 200
+      },
+      "3_plus": {
+        "low": 210,
+        "expected": 245,
+        "high": 280
+      }
+    },
+    "may": {
+      "1": {
+        "low": 80,
+        "expected": 95,
+        "high": 110
+      },
+      "2": {
+        "low": 120,
+        "expected": 135,
+        "high": 150
+      },
+      "3_plus": {
+        "low": 160,
+        "expected": 185,
+        "high": 210
+      }
+    },
+    "june": {
+      "1": {
+        "low": 120,
+        "expected": 140,
+        "high": 160
+      },
+      "2": {
+        "low": 170,
+        "expected": 195,
+        "high": 220
+      },
+      "3_plus": {
+        "low": 240,
+        "expected": 275,
+        "high": 310
+      }
+    },
+    "july": {
+      "1": {
+        "low": 150,
+        "expected": 175,
+        "high": 200
+      },
+      "2": {
+        "low": 210,
+        "expected": 245,
+        "high": 280
+      },
+      "3_plus": {
+        "low": 300,
+        "expected": 345,
+        "high": 390
+      }
+    },
+    "august": {
+      "1": {
+        "low": 140,
+        "expected": 165,
+        "high": 190
+      },
+      "2": {
+        "low": 200,
+        "expected": 230,
+        "high": 260
+      },
+      "3_plus": {
+        "low": 280,
+        "expected": 325,
+        "high": 370
+      }
+    },
+    "september": {
+      "1": {
+        "low": 100,
+        "expected": 115,
+        "high": 130
+      },
+      "2": {
+        "low": 140,
+        "expected": 160,
+        "high": 180
+      },
+      "3_plus": {
+        "low": 190,
+        "expected": 220,
+        "high": 250
+      }
+    },
+    "october": {
+      "1": {
+        "low": 90,
+        "expected": 105,
+        "high": 120
+      },
+      "2": {
+        "low": 130,
+        "expected": 145,
+        "high": 160
+      },
+      "3_plus": {
+        "low": 170,
+        "expected": 195,
+        "high": 220
+      }
+    },
+    "november": {
+      "1": {
+        "low": 140,
+        "expected": 160,
+        "high": 180
+      },
+      "2": {
+        "low": 200,
+        "expected": 225,
+        "high": 250
+      },
+      "3_plus": {
+        "low": 280,
+        "expected": 315,
+        "high": 350
+      }
+    },
+    "december": {
+      "1": {
+        "low": 200,
+        "expected": 225,
+        "high": 250,
+        "high_lower_bound": 250,
+        "high_is_modeling_cap": true
+      },
+      "2": {
+        "low": 290,
+        "expected": 325,
+        "high": 360,
+        "high_lower_bound": 360,
+        "high_is_modeling_cap": true
+      },
+      "3_plus": {
+        "low": 410,
+        "expected": 455,
+        "high": 500,
+        "high_lower_bound": 500,
+        "high_is_modeling_cap": true
+      }
+    }
+  },
+  "utility_range_notes": "Monthly apartment utilities excluding internet. Studio uses the 1-bedroom group and 3_plus uses the provided grouped estimate. Expected is the user-approved endpoint midpoint. Originally open-ended highs retain high_lower_bound and high_is_modeling_cap; high now uses that endpoint as an explicitly user-approved modeling cap, not a guaranteed ceiling.",
+  "utility_split": "equal",
+  "utility_split_notes": "User-approved 50/50 for two occupants; renters insurance is not shared.",
+  "utility_source": {
+    "name": "Wise.com",
+    "date_found": "2026-10-03",
+    "verification": "User-provided table; specific source page not supplied."
+  },
+  "utility_sharing_occupants": 2,
+  "monthly_cost_config": {
+    "basis": {
+      "rent": "household",
+      "internet": "household",
+      "renters_insurance": "per_person",
+      "groceries": "household"
+    },
+    "sharing_occupants": 2
+  },
+  "monthly_cost_ranges": {
+    "internet": {
+      "low": 40,
+      "expected": 65,
+      "high": 90
+    },
+    "renters_insurance": {
+      "low": 10,
+      "expected": 10,
+      "high": 10
+    },
+    "groceries": {
+      "low": 771,
+      "expected": 771,
+      "high": 771
+    }
+  },
+  "monthly_cost_assumptions": "Internet expected is the user-approved 65. Insurance 10 per person and groceries 771 per household are user-approved fixed assumptions, not measured uncertainty bounds. Equal sharing is approved for two occupants. Bedroom count is supplied per apartment. Utility '+' thresholds are user-approved modeling caps, not real guaranteed maximums."
+}

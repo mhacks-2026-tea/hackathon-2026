@@ -37,10 +37,9 @@ import { StatusText } from "@/components/status-text";
 import {
   estimateHousingScenario,
   getDashboardData,
-  sendMockAssistantMessage,
-  simulateHousingDecision,
+  sendAssistantMessage,
 } from "@/lib/data/dashboard";
-import { campusProfiles, initialChatMessages, mockPrompts } from "@/lib/mock-data";
+import { campusProfiles, mockPrompts } from "@/lib/mock-data";
 import type {
   CampusDashboardData,
   CampusId,
@@ -244,7 +243,7 @@ function AccountMenu({
   return (
     <div className="account-menu-wrap">
       <button
-        aria-label="Open account menu for Adam Ressom"
+        aria-label="Open account menu for Alex · demo account"
         aria-controls={menuId}
         aria-expanded={isOpen}
         aria-haspopup="menu"
@@ -252,14 +251,14 @@ function AccountMenu({
         onClick={() => setIsOpen((open) => !open)}
         type="button"
       >
-        <span className="avatar" aria-hidden="true">AR</span>
+        <span className="avatar" aria-hidden="true">AX</span>
         <ChevronDown size={15} aria-hidden="true" />
       </button>
       {isOpen && (
         <div className="account-menu" id={menuId} role="menu" aria-label="Account">
           <div className="account-menu-identity">
-            <strong>Adam Ressom</strong>
-            <span>Student account</span>
+            <strong>Alex · demo account</strong>
+            <span>Sandbox demo account</span>
           </div>
           <div className="mobile-campus-selector">
             <CampusSelector data={data} onSelect={onCampusChange} />
@@ -399,7 +398,7 @@ function HeroAnswer({
       : "Comfortable through the year";
 
   if (!overview) {
-    const legacyCosts = costs.filter(({ label }) => label !== "Parking");
+    const legacyCosts = costs;
     return (
       <section className="answer-section" aria-labelledby="answer-title">
         <div className="answer-primary" aria-live="polite">
@@ -519,7 +518,7 @@ function HeroAnswer({
             </div>
             <details className="estimate-disclosure">
               <summary>How we estimate this</summary>
-              <p>We add rent, utilities, internet, renters insurance, parking, and transportation using the sample student profile.</p>
+              <p>We add rent, utilities, internet, renters insurance, parking, and transportation using server financial history and the selected campus assumptions.</p>
             </details>
           </div>
           <p className="answer-takeaway">
@@ -565,7 +564,7 @@ function FinanceStrip({ data }: { data: DashboardData }) {
       </div>
       <p className="sample-caption">
         <Info size={16} aria-hidden="true" />
-        Sample profile. These estimates are illustrative; no accounts are connected.
+        {data.source === "nessie-sandbox" ? "Nessie sandbox financial data" : "Alex demo · fictional financial inputs"}
       </p>
       <p className="safety-cushion-note">
         Your safety cushion is the minimum balance you want to keep for unexpected costs.
@@ -802,7 +801,7 @@ function RentAnalyzer({
   defaultCosts,
   estimates,
 }: {
-  onResult: (result: AffordabilityResult) => void;
+  onResult: (scenario: HousingScenario) => void;
   expanded?: boolean;
   data: DashboardData;
   defaultRent: number;
@@ -824,7 +823,7 @@ function RentAnalyzer({
     setError(null);
 
     try {
-      const result = await simulateHousingDecision({
+      const result = await estimateHousingScenario({
         monthlyRent: Number(rent || defaultRent),
         roommates: Number(roommates),
         utilities: utilities ? Number(utilities) : undefined,
@@ -930,7 +929,7 @@ function RentAnalyzer({
       )}
       {error && <p className="inline-error" role="alert">{error}</p>}
       <p className="analyzer-note">
-        Sample estimates are available for{" "}
+        Rent suggestions are available for{" "}
         {estimates.map((estimate, index) => (
           <span key={estimate.monthlyRent}>
             {index > 0 && (index === estimates.length - 1 ? " and " : ", ")}
@@ -939,8 +938,8 @@ function RentAnalyzer({
         ))}
         .{" "}
         {expanded
-          ? "Advanced entries aren’t recalculated in these preset examples yet."
-          : "Each uses the sample student and campus profile."}
+          ? "All entered costs are recalculated on the server."
+          : "Results use the configured financial profile and campus assumptions."}
       </p>
     </form>
   );
@@ -973,8 +972,8 @@ function CashFlowSection({
           <h2 id="cashflow-title">{overview ? "Your year" : headline}</h2>
           <p>
             {overview
-              ? `${headline}. What happens to your balance month by month, May to December.`
-              : "Projected balance from May through December."}
+              ? `${headline}. What happens to your balance month by month, across the modeled lease.`
+              : "Lowest daily balance in each projected month."}
           </p>
         </div>
         <span className="chart-range">
@@ -1233,17 +1232,19 @@ function AskMovinEntry({ result }: { result: AffordabilityResult }) {
 }
 
 function ChatExperience({
+  selectedQuery,
   data,
   initialPrompt,
   result,
   onSelectScenario,
 }: {
+  selectedQuery: import("@/lib/types").HousingQuery;
   data: DashboardData;
   initialPrompt?: string;
   result: AffordabilityResult;
   onSelectScenario: (scenario: HousingScenario) => void;
 }) {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialChatMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState(initialPrompt ?? "");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1275,8 +1276,9 @@ function ChatExperience({
     setError(null);
 
     try {
-      const reply = await sendMockAssistantMessage(prompt);
+      const reply = await sendAssistantMessage(prompt, data, selectedQuery);
       setMessages((current) => [...current, reply]);
+      if (reply.scenario) onSelectScenario(reply.scenario);
       if (reply.scenarioId) {
         const scenario = data.scenarios.find(
           (item) => item.id === reply.scenarioId,
@@ -1321,7 +1323,7 @@ function ChatExperience({
                 </li>
               ))}
             </ul>
-            <p className="chat-demo-note">Preview chat · answers use sample housing data, not a live AI service.</p>
+            <p className="chat-demo-note">Ask Movin uses the server finance agent and your selected housing plan. Offline question interpretation; calculated financial answers.</p>
           </div>
         ) : (
           <div className="chat-messages" aria-live="polite" aria-busy={isSending}>
@@ -1486,7 +1488,10 @@ export function MovinDashboard({
 
   useEffect(() => {
     let active = true;
-    getDashboardData(campusId)
+    Promise.resolve().then(() => {
+      if (active) { setError(null); setData(null); setAnalyzedResult(null); setAnalyzedScenario(null); }
+      return getDashboardData(campusId);
+    })
       .then((response) => {
         if (active) setData(response);
       })
@@ -1549,6 +1554,12 @@ export function MovinDashboard({
 
     async function restoreScenarioFromUrl() {
       const params = new URLSearchParams(window.location.search);
+      const saved = window.sessionStorage.getItem("movin-plan");
+      let prior: { campus?: string; query?: import("@/lib/types").HousingQuery } = {};
+      try { prior = saved ? JSON.parse(saved) : {}; } catch {}
+      if (!params.has("rent") && prior.campus === dashboardData.campus.id && prior.query) {
+        for (const [key, value] of Object.entries(prior.query)) if (value !== undefined) params.set(key === "monthlyRent" ? "rent" : key, String(value));
+      }
       const rentValue = params.get("rent");
       const roommateValue = Number(params.get("roommates") ?? "0");
       const utilitiesValue = params.get("utilities") ?? "";
@@ -1645,7 +1656,7 @@ export function MovinDashboard({
 
   function selectScenario(scenario: HousingScenario) {
     setSelectedId(scenario.id);
-    setAnalyzedScenario(null);
+    setAnalyzedScenario({ ...scenario, comparisons: selectedScenario.comparisons });
     setAnalyzedResult(null);
     setOverviewRent(formatRentInput(scenario.monthlyRent));
     setOverviewRoommates(scenario.roommates);
@@ -1653,13 +1664,14 @@ export function MovinDashboard({
     setOverviewParking("");
     setOverviewLeaseStart("");
     setOverviewScenarioError(null);
-    if (view === "overview") {
+    {
       const params = new URLSearchParams({
         campus: dashboardData.campus.id,
         rent: String(scenario.monthlyRent),
         roommates: String(scenario.roommates),
       });
       window.history.pushState(null, "", `?${params.toString()}`);
+      window.sessionStorage.setItem("movin-plan", JSON.stringify({ campus: dashboardData.campus.id, query: scenario.query ?? { monthlyRent: scenario.monthlyRent, roommates: scenario.roommates } }));
     }
   }
 
@@ -1694,6 +1706,7 @@ export function MovinDashboard({
         ...(overviewLeaseStart ? { leaseStart: overviewLeaseStart } : {}),
       });
       window.history.pushState(null, "", `?${params.toString()}`);
+      window.sessionStorage.setItem("movin-plan", JSON.stringify({ campus: dashboardData.campus.id, query: scenario.query ?? { monthlyRent: scenario.monthlyRent, roommates: scenario.roommates } }));
     } catch (reason: unknown) {
       setOverviewScenarioError(
         reason instanceof Error ? reason.message : "We couldn’t analyze this apartment. Try again.",
@@ -1711,6 +1724,7 @@ export function MovinDashboard({
     setOverviewLeaseStart("");
     setAnalyzedScenario(null);
     setAnalyzedResult(null);
+    window.sessionStorage.removeItem("movin-plan");
     setSelectedId("solo");
     setOverviewScenarioError(null);
     window.history.pushState(
@@ -1721,7 +1735,7 @@ export function MovinDashboard({
   }
 
   const pageTitle = {
-    overview: "Good afternoon, Adam",
+    overview: "Good afternoon, Alex",
     housing: "Make a housing plan that fits.",
     ask: "Ask about your housing plan.",
     neighborhoods: "Find your place near campus.",
@@ -1736,6 +1750,7 @@ export function MovinDashboard({
       onUndoCampusChange={undoCampusChange}
       onDismissCampusNotice={() => setCampusNotice(null)}
     >
+      <details className="data-assumptions"><summary>{data.source === "nessie-sandbox" ? "Nessie sandbox" : "Alex demo"} · Data sources and assumptions</summary><ul>{data.notices?.map((notice, index) => <li key={index}>{notice}</li>)}</ul></details>
       {view === "overview" && (
         <>
           <header className="overview-header" id="overview">
@@ -1771,10 +1786,11 @@ export function MovinDashboard({
               : `${selectedScenario.roommates} roommate${selectedScenario.roommates === 1 ? "" : "s"}`}
           </p>
           <HeroAnswer data={data} result={currentResult} overview busy={isAnalyzingOverview} />
+          <p className="sample-caption">Move-in cash required: {formatMoney(currentResult.upfrontCashRequired ?? 0)} · includes first month’s rent, deposit, application fee and moving costs.</p>
           <FinanceStrip data={data} />
           <CashFlowSection data={data} scenario={selectedScenario} overview />
           <ScenarioComparison
-            data={data}
+            data={{ ...data, scenarios: selectedScenario.comparisons ?? data.scenarios }}
             onSelect={selectScenario}
             selectedId={selectedId}
             overview
@@ -1794,6 +1810,7 @@ export function MovinDashboard({
             <p>See how rent, utilities, and getting to campus change your monthly picture.</p>
           </header>
           <HeroAnswer data={data} result={currentResult} />
+          <p className="sample-caption">Move-in cash required: {formatMoney(currentResult.upfrontCashRequired ?? 0)} · includes first month’s rent, deposit, application fee and moving costs.</p>
           <div className="housing-planner-grid">
             <section className="analyzer-section" aria-labelledby="housing-analyzer-title">
               <div className="section-heading">
@@ -1806,8 +1823,10 @@ export function MovinDashboard({
                 defaultRent={data.affordability.breakdown.rent}
                 defaultCosts={data.affordability.breakdown}
                 estimates={data.rentEstimates}
-                onResult={(result) => {
-                  setAnalyzedResult(result);
+                onResult={(scenario) => {
+                  setAnalyzedScenario(scenario);
+                  setAnalyzedResult(null);
+                  window.sessionStorage.setItem("movin-plan", JSON.stringify({ campus: data.campus.id, query: scenario.query }));
                   setLeaseResults((current) => current + 1);
                 }}
               />
@@ -1827,10 +1846,10 @@ export function MovinDashboard({
                 <div className="ledger-row"><span>Insurance</span><span>{formatMoney(currentResult.breakdown.insurance)}</span></div>
                 <div className="ledger-row"><span>Transportation</span><span>{formatMoney(currentResult.breakdown.transportation)}</span></div>
               </div>
-              <p className="housing-note">The preview uses the current sample profile. Connect the financial simulator to replace these estimates.</p>
+              <p className="housing-note">Calculated by the finance engine. Check the data sources and assumptions above before comparing a lease.</p>
             </aside>
           </div>
-          <ScenarioComparison data={data} onSelect={selectScenario} selectedId={selectedId} />
+          <ScenarioComparison data={{ ...data, scenarios: selectedScenario.comparisons ?? data.scenarios }} onSelect={selectScenario} selectedId={selectedId} />
           <ListingCards campus={data.campus} />
           <CashFlowSection data={data} scenario={selectedScenario} />
         </>
@@ -1842,6 +1861,7 @@ export function MovinDashboard({
             <p>Questions about rent, roommates, or a tight month.</p>
           </header>
           <ChatExperience
+            selectedQuery={selectedScenario.query ?? { monthlyRent: selectedScenario.monthlyRent, roommates: selectedScenario.roommates }}
             data={data}
             initialPrompt={initialPrompt}
             onSelectScenario={selectScenario}

@@ -36,6 +36,7 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
       </header>
 
       <div className="auth-content">
+        <p className="sample-caption">Hackathon demo · continue as Alex. No real account is created and credentials are not verified.</p>
         <section className="auth-story" aria-labelledby="auth-story-title">
           <p className="auth-kicker">HOUSING DECISIONS, MADE CLEAR</p>
           <h1 id="auth-story-title">

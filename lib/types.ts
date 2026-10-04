@@ -33,6 +33,8 @@ export interface HousingCostBreakdown {
 }
 
 export interface HousingScenario {
+  comparisons?: HousingScenario[];
+  query?: HousingQuery;
   id: string;
   title: string;
   monthlyRent: number;
@@ -46,6 +48,7 @@ export interface HousingScenario {
 }
 
 export interface AffordabilityResult {
+  upfrontCashRequired?: number;
   status: AffordabilityStatus;
   summary: string;
   monthlyRemaining: number;
@@ -69,6 +72,8 @@ export interface Neighborhood {
 }
 
 export interface DashboardData {
+  source?: string;
+  notices?: string[];
   campus: CampusProfile;
   financials: FinancialSummary;
   cashFlow: CashFlowPoint[];

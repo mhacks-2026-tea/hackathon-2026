@@ -1,0 +1,17 @@
+{
+  "housing": {
+    "campusId": "umich",
+    "name": "Fictional example apartment",
+    "leaseStart": "2026-11-01",
+    "leaseEnd": "2026-12-01",
+    "monthlyApartmentRentDollars": 1050,
+    "bedrooms": 1,
+    "roommates": 0,
+    "commute": "walk",
+    "monthlyParkingCents": 0,
+    "securityDepositCents": 105000,
+    "applicationFeesCents": 5000,
+    "movingCostsCents": 15000
+  },
+  "safetyBufferCents": 20000
+}

@@ -5032,3 +5032,7 @@ select:focus-visible {
     order: initial;
   }
 }
+
+.data-assumptions { margin: 0 0 24px; color: var(--muted-strong); font-size: 13px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+.data-assumptions summary { cursor: pointer; color: var(--primary); }
+.data-assumptions li { margin: 8px 0; }

@@ -7,7 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx scripts/test-nessie.ts",
+    "test:finance": "tsx scripts/test-finance.ts",
+    "check:nessie": "node --env-file=.env.local --import tsx scripts/check-nessie.ts",
+    "test:campus-finance": "tsx scripts/test-campus-finance.ts",
+    "demo:campus-nessie": "node --env-file=.env.local --import tsx scripts/demo-campus-nessie.ts",
+    "test:campus": "tsx scripts/test-campus.ts",
+    "test:all": "npm run typecheck && npm test && npm run test:finance && npm run test:campus && npm run test:campus-finance && npm run test:spending-agent && npm run test:nessie-finance && npm run test:finance-server",
+    "test:spending-agent": "tsx scripts/test-spending-agent.ts",
+    "serve:finance": "node --env-file=.env.local --import tsx scripts/serve-finance.ts",
+    "test:finance-server": "tsx scripts/test-finance-server.ts",
+    "test:nessie-finance": "tsx scripts/test-nessie-finance.ts"
   },
   "dependencies": {
     "lucide-react": "^1.51.0",
@@ -18,12 +29,17 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22.0.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.8",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5.0.0",
+    "tsx": "^4.0.0"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
   }
 }

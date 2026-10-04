@@ -241,7 +241,7 @@ export function CashFlowChart({
               />
               <YAxis
                 axisLine={false}
-                domain={[0, "dataMax + 500"]}
+                domain={["dataMin - 500", "dataMax + 500"]}
                 tickFormatter={(value: number) => currency.format(value)}
                 tickLine={false}
                 tick={{ fill: "var(--muted)", fontSize: overview ? 13 : 10 }}
