@@ -1,0 +1,6 @@
+neighborhood,notes,source,rent_1_bedroom_low,rent_1_bedroom_high,shared_1_bedroom_per_person_low,shared_1_bedroom_per_person_high,rent_2_bedroom_low,rent_2_bedroom_high,shared_2_bedroom_per_person_low,shared_2_bedroom_per_person_high,rent_3_plus_bedroom_low,rent_3_plus_bedroom_high,shared_3_plus_bedroom_per_person_low,shared_3_plus_bedroom_per_person_high
+Kerrytown,Supplied rent ranges; shared prices are per person; + means an open upper bound.,https://www.roomies.com,1450,2100,1450,2100,1900,2800,950,1400,2500,4500+,833,1500+
+Burns Park,Supplied rent ranges; shared prices are per person; + means an open upper bound.,https://www.roomies.com,1195,1400,1195,1400,1700,2200,850,1100,2400,3600+,800,1200+
+Oxbridge,Supplied rent ranges; shared prices are per person; + means an open upper bound.,https://www.roomies.com,825,1200,825,1200,1400,2000,700,1000,2400,3000+,800,1000+
+Glazier Way / North Side,Supplied rent ranges; shared prices are per person; + means an open upper bound.,https://www.roomies.com,1279,1500,1279,1500,1469,1919,735,960,2200,3350+,733,1117+
+Downtown/Campus,Supplied rent ranges; shared prices are per person; + means an open upper bound.,https://www.roomies.com,2100,2550,2100,2550,2600,3500,1300,1750,3600,5400+,1200,1800+

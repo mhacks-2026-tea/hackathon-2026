@@ -1,3 +1,7 @@
 node_modules/
 .env*
 !.env.example
+
+# Python test/runtime caches.
+__pycache__/
+*.pyc
