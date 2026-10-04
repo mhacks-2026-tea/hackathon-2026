@@ -129,7 +129,9 @@ class LogicTests(unittest.TestCase):
             self.assertEqual(loader.find_neighborhoods_in_budget('test', 0, 1, 999), [])
             matches = loader.find_neighborhoods_in_budget('test', 100, 1, 20)
             self.assertEqual([row.neighborhood for row in matches], ['A'])
-            self.assertEqual(len(loader.find_neighborhoods_in_budget('test', 999, 1, 999)), 2)
+            # Missing commute for a candidate must not masquerade as no match.
+            with self.assertRaisesRegex(ValueError, 'Missing commute minutes'):
+                loader.find_neighborhoods_in_budget('test', 999, 1, 999)
 
     def test_move_in_total_and_shape(self):
         with patch.object(loader, '_load_cost_data', return_value=synthetic_profile()):

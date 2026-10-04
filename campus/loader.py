@@ -1,5 +1,5 @@
 """Data shapes for campus profiles and neighborhood records."""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 
@@ -35,6 +35,8 @@ class Neighborhood:
     bus_minutes: Optional[float]
     notes: Optional[str]
     source: Optional[str]
+    # Supplied ranges retain open upper bounds; no median is invented.
+    rent_ranges: dict = field(default_factory=dict)
 
 
 """Offline loading and validation; blank CSV cells remain None."""
@@ -105,7 +107,7 @@ def list_neighborhoods(campus_id: str) -> list[Neighborhood]:
     with stream:
         reader = csv.DictReader(stream)
         required = [field.name for field in fields(Neighborhood)
-                    if field.name not in {'type', 'notes'}]
+                    if field.name not in {'type', 'notes', 'rent_ranges'}]
         for name in required:
             if name not in (reader.fieldnames or []):
                 raise ValueError(f'{path}: missing required column {name!r}')
@@ -120,6 +122,8 @@ def list_neighborhoods(campus_id: str) -> list[Neighborhood]:
             values = {}
             for field in fields(Neighborhood):
                 name = field.name
+                if name == 'rent_ranges':
+                    continue
                 text = (row.get(name) or '').strip()
                 value = text or None
                 if text and name in numeric:
@@ -132,62 +136,131 @@ def list_neighborhoods(campus_id: str) -> list[Neighborhood]:
                 values[name] = value
             if values['neighborhood'] is None:
                 continue
+            values['rent_ranges'] = {}
+            for group in ('1', '2', '3_plus'):
+                for shared in (False, True):
+                    prefix = f'shared_{group}_bedroom_per_person' if shared else f'rent_{group}_bedroom'
+                    low_text = (row.get(prefix + '_low') or '').strip()
+                    high_text = (row.get(prefix + '_high') or '').strip()
+                    if not low_text and not high_text:
+                        continue
+                    # An incomplete range is unknown, not a free or fixed price.
+                    low = _rent_endpoint(low_text, prefix + '_low')
+                    high = _rent_endpoint(high_text, prefix + '_high')
+                    if low_text.endswith('+'):
+                        raise ValueError(f'{prefix}: low must be a finite endpoint')
+                    upper = None if high_text.endswith('+') else high
+                    if low is not None and high is not None and low > high:
+                        raise ValueError(f'{prefix}: low exceeds upper endpoint')
+                    values['rent_ranges'][('shared_' if shared else '') + group] = {
+                        'low': low, 'high': upper,
+                        'high_lower_bound': high if high_text.endswith('+') else None,
+                    }
             result.append(Neighborhood(**values))
         return result
 
 
-def get_rent_benchmark(
-    campus_id: str, bedrooms: int, shared: bool = False
-) -> dict[str, Optional[float]]:
-    """Return min/median/max of available neighborhood rent medians.
+def _rent_endpoint(text: str, name: str) -> Optional[float]:
+    """Parse supplied CSV numbers, retaining '+' separately in the range."""
+    if not text:
+        return None
+    try:
+        value = float(text.removesuffix('+'))
+    except ValueError as exc:
+        raise ValueError(f'{name}: invalid rent endpoint') from exc
+    return _nonnegative_number(value, name)
 
-    These describe the spread of neighborhood medians, not listing-level
-    bounds or a HUD baseline. Missing and zero placeholder rents are excluded.
-    Shared mode uses the recorded per-bedroom shared rent without deriving
-    an unsupported estimate from whole-unit rent.
-    """
-    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms not in (1, 2):
-        raise ValueError('bedrooms must be 1 or 2; no other bedroom rent columns are available')
+
+def _selected_rent(row: Neighborhood, bedrooms: int, shared: bool) -> Optional[dict]:
+    """Prefer the supplied range; fall back to legacy medians when available."""
+    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms < 1:
+        raise ValueError('bedrooms must be a positive integer; studio rent data is unavailable')
     if not isinstance(shared, bool):
         raise ValueError('shared must be a boolean')
-    column = 'rent_per_bedroom_shared' if shared else f'median_{bedrooms}_bedroom_rent'
-    rents = [
-        rent for neighborhood in list_neighborhoods(campus_id)
-        if (rent := getattr(neighborhood, column)) is not None and rent > 0
-    ]
-    if not rents:
+    group = str(bedrooms) if bedrooms <= 2 else '3_plus'
+    value = row.rent_ranges.get(('shared_' if shared else '') + group)
+    if value is not None:
+        return value
+    rent = row.rent_per_bedroom_shared if shared else (
+        row.median_1_bedroom_rent if bedrooms == 1 else
+        row.median_2_bedroom_rent if bedrooms == 2 else None)
+    if rent is None or rent <= 0:
+        return None
+    return {'low': rent, 'high': rent, 'high_lower_bound': None}
+
+
+def get_rent_benchmark(campus_id: str, bedrooms: int, shared: bool = False) -> dict:
+    """Aggregate supplied ranges; median stays unknown when no medians exist.
+
+    Open or missing upper bounds propagate as high=None. Shared prices are
+    already per person and are never divided again. Samples are neighborhoods,
+    not individual listings, and an endpoint does not guarantee availability.
+    """
+    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms < 1:
+        raise ValueError('bedrooms must be a positive integer')
+    if not isinstance(shared, bool):
+        raise ValueError('shared must be a boolean')
+    rows = list_neighborhoods(campus_id)
+    ranges = [value for row in rows if (value := _selected_rent(row, bedrooms, shared)) is not None]
+    if not ranges:
         return {'low': None, 'median': None, 'high': None}
-    return {'low': min(rents), 'median': median(rents), 'high': max(rents)}
+    group = str(bedrooms) if bedrooms <= 2 else '3_plus'
+    has_ranges = any(('shared_' if shared else '') + group in row.rent_ranges for row in rows)
+    lows = [value['low'] for value in ranges if value['low'] is not None]
+    highs = [value['high'] for value in ranges]
+    return {
+        'low': min(lows) if lows else None,
+        'median': None if has_ranges else median(lows),
+        'high': max(highs) if all(value is not None for value in highs) else None,
+    }
 
 
 def find_neighborhoods_in_budget(
-    campus_id: str, max_rent: float, bedrooms: int, max_commute_min: float
+    campus_id: str, max_rent: float, bedrooms: int,
+    max_commute_min: Optional[float] = None, *, shared: bool = False,
+    commute_method: Optional[str] = None,
+    commute_minutes: Optional[dict[str, float]] = None,
 ) -> list[Neighborhood]:
-    """Find whole-unit rents within budget with at least one feasible commute.
+    """Return potential matches whose supplied rent range starts within budget.
 
-    Commute means the shortest available walk, bike, or bus time.
-    Missing or zero placeholder rents and missing commute times are skipped.
-    Incomplete unrelated fields do not exclude an otherwise usable record.
+    A range overlap is not a verified affordable listing. With no commute limit,
+    no commute claim is made. With a limit, missing candidate commute times raise
+    an actionable error instead of looking like zero matching neighborhoods.
+    Caller overrides must use neighborhood names and the selected travel method.
     """
-    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms not in (1, 2):
-        raise ValueError('bedrooms must be 1 or 2; no other bedroom rent columns are available')
-    for name, value in (('max_rent', max_rent), ('max_commute_min', max_commute_min)):
-        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
-            raise ValueError(f'{name} must be a finite nonnegative number')
-    column = f'median_{bedrooms}_bedroom_rent'
-    matches = []
-    for neighborhood in list_neighborhoods(campus_id):
-        rent = getattr(neighborhood, column)
-        if rent is None or rent <= 0 or rent > max_rent:
+    _nonnegative_number(max_rent, 'max_rent')
+    if isinstance(bedrooms, bool) or not isinstance(bedrooms, int) or bedrooms < 1:
+        raise ValueError('bedrooms must be a positive integer')
+    if not isinstance(shared, bool):
+        raise ValueError('shared must be a boolean')
+    if max_commute_min is not None:
+        _nonnegative_number(max_commute_min, 'max_commute_min')
+    if commute_method not in (None, 'walk', 'bike', 'bus'):
+        raise ValueError('commute_method must be walk, bike, or bus')
+    overrides = commute_minutes or {}
+    for name, minutes in overrides.items():
+        _nonnegative_number(minutes, f'commute_minutes.{name}')
+    matches, missing = [], []
+    for row in list_neighborhoods(campus_id):
+        rent = _selected_rent(row, bedrooms, shared)
+        if rent is None or rent['low'] is None or rent['low'] > max_rent:
             continue
-        times = [
-            time for time in (
-                neighborhood.walk_minutes, neighborhood.bike_minutes,
-                neighborhood.bus_minutes
-            ) if time is not None
-        ]
-        if times and min(times) <= max_commute_min:
-            matches.append(neighborhood)
+        if max_commute_min is None:
+            matches.append(row)
+            continue
+        if row.neighborhood in overrides:
+            times = [overrides[row.neighborhood]]
+        else:
+            methods = (commute_method,) if commute_method else ('walk', 'bike', 'bus')
+            times = [getattr(row, method + '_minutes') for method in methods
+                     if getattr(row, method + '_minutes') is not None]
+        if not times:
+            missing.append(row.neighborhood)
+        elif min(times) <= max_commute_min:
+            matches.append(row)
+    if missing:
+        raise ValueError('Missing commute minutes for potential rent matches: ' + ', '.join(missing)
+                         + '. Supply commute_minutes or omit the commute limit.')
     return matches
 
 
@@ -277,36 +350,50 @@ def estimate_utilities(
             for key, value in household.items()}
 
 
-def estimate_move_in_cost(campus_id: str, rent: float, extras: float = 0) -> dict:
-    """Return deposit, first month, application fee, extras, and their total.
+def estimate_move_in_cost(
+    campus_id: str, rent: float, extras: float = 0, *,
+    security_deposit: Optional[float] = None,
+    application_fee: Optional[float] = None,
+) -> dict:
+    """Return an incomplete result until actual missing listing costs are supplied.
 
-    No range is inferred. Existing data placeholders are preserved in the
-    arithmetic and explicitly labeled, so this is not a verified estimate.
-    data_status may be set to 'verified' only after data research/source logging.
+    Explicit zero overrides mean no charge. Zero campus placeholders do not.
+    The known subtotal is not a complete total; extra charges are caller supplied.
     """
     rent = _nonnegative_number(rent, 'rent')
     extras = _nonnegative_number(extras, 'extras')
     data = _load_cost_data(campus_id)
-    for field in ('security_deposit_months', 'application_fee'):
-        if field not in data:
-            raise ValueError(f'Missing required field {field!r}')
-        _nonnegative_number(data[field], field)
     status = data.get('data_status', 'placeholder')
     if status not in ('placeholder', 'verified'):
         raise ValueError("data_status must be 'placeholder' or 'verified'")
+    def resolve(override, field, multiplier=1):
+        if override is not None:
+            return _nonnegative_number(override, field)
+        value = data.get(field)
+        if value is None:
+            return None
+        value = _nonnegative_number(value, field)
+        if value == 0 and status == 'placeholder':
+            return None
+        return value * multiplier
     items = {
-        'security_deposit': rent * data['security_deposit_months'],
+        'security_deposit': resolve(security_deposit, 'security_deposit_months', rent),
         'first_month_rent': rent,
-        'application_fee': data['application_fee'],
+        'application_fee': resolve(application_fee, 'application_fee'),
         'extras': extras,
     }
-    total = sum(items.values())
-    if not math.isfinite(total):
+    missing = [name for name, value in items.items() if value is None]
+    subtotal = sum(value for value in items.values() if value is not None)
+    if not math.isfinite(subtotal):
         raise ValueError('Move-in total exceeds the supported numeric range')
-    return {'items': items, 'total': total, 'data_status': status}
+    return {'items': items, 'total': None if missing else subtotal,
+            'known_subtotal': subtotal, 'missing_fields': missing,
+            'data_status': status}
 
 
-def estimate_commute_cost(campus_id: str, method: str) -> dict[str, float]:
+def estimate_commute_cost(
+    campus_id: str, method: str, *, monthly_cost: Optional[float] = None
+) -> dict[str, float]:
     """Return an explicit monthly commute range for walk/bike/bus/car.
 
     Required data: commute_cost_ranges[method] with low/expected/high.
@@ -315,6 +402,10 @@ def estimate_commute_cost(campus_id: str, method: str) -> dict[str, float]:
     if not isinstance(method, str) or method.lower() not in ('walk', 'bike', 'bus', 'car'):
         raise ValueError('method must be walk, bike, bus, or car')
     method = method.lower()
+    # A student can supply a listing-specific transport budget, including parking.
+    if monthly_cost is not None:
+        value = _nonnegative_number(monthly_cost, 'monthly_cost')
+        return {key: value for key in ('low', 'expected', 'high')}
     data = _load_cost_data(campus_id)
     ranges = data.get('commute_cost_ranges')
     if not isinstance(ranges, dict):
@@ -327,7 +418,7 @@ def estimate_commute_cost(campus_id: str, method: str) -> dict[str, float]:
 def estimate_true_monthly_cost(
     campus_id: str, rent: float, roommates: int = 0,
     commute: str = "bus", month: Optional[str] = None,
-    *, bedrooms: Optional[int] = None
+    *, bedrooms: Optional[int] = None, commute_monthly_cost: Optional[float] = None
 ) -> dict:
     """Return items, total low/expected/high, and generic confidence.
 
@@ -385,7 +476,9 @@ def estimate_true_monthly_cost(
         cost = _cost_range(ranges.get(name), f'monthly_cost_ranges.{name}')
         divisor = occupants if basis[name] == 'household' else 1
         items[name] = {key: value / divisor for key, value in cost.items()}
-    items['commute'] = estimate_commute_cost(campus_id, commute)
+    items['commute'] = (estimate_commute_cost(campus_id, commute)
+                        if commute_monthly_cost is None else
+                        estimate_commute_cost(campus_id, commute, monthly_cost=commute_monthly_cost))
     if any(item.get('high') is None for item in items.values()):
         raise ValueError('Cannot produce a finite monthly high total: a component has an open-ended upper range')
     total = {
