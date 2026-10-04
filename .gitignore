@@ -1,6 +1,6 @@
-# Local credentials and installed dependencies never belong in a commit.
-.env.local
 node_modules/
+.env*
+!.env.example
 
 # Python test/runtime caches.
 __pycache__/
