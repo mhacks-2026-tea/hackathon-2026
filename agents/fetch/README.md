@@ -20,6 +20,8 @@ python3 -m venv .venv-fetch
 .venv-fetch/bin/pip install -r agents/fetch/requirements.txt
 .venv-fetch/bin/python -m unittest discover -s agents/fetch -p 'test_*.py'
 .venv-fetch/bin/python agents/fetch/check_asi.py
+# After starting the local finance service, test the fictional four-turn workflow:
+.venv-fetch/bin/python agents/fetch/check_multiturn.py
 ```
 
 In ignored `.env.local`, set the existing Nessie settings, `FINANCE_HISTORY_START`,
@@ -46,6 +48,8 @@ Lease November 1, 2026 to December 1, 2026. My deposit is $1050,
 application fee $50, moving $150, monthly parking $0, minimum balance $200."
 You can provide these details over multiple messages, correct the rent, or send
 `reset`. Conversations expire after ten minutes and are isolated by sender/session.
+Replies show a short forecast summary. Send `details` to re-evaluate the last
+scenario and display its complete assumptions and warnings without a model call.
 Alternatively, send the contents of `example-request.json` as a chat message.
 All example costs are fictional, zero costs are explicit assumptions, dates use
 the fixed demo snapshot, and roommates means other occupants besides the student.
