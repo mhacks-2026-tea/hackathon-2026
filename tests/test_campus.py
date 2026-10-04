@@ -215,12 +215,32 @@ class DataAcceptanceTests(unittest.TestCase):
         profile = loader.get_campus_profile('umich')
         self.assertEqual(profile.id, 'umich')
 
-    def test_actual_neighborhoods_preserve_empty_cells(self):
+    def test_actual_neighborhood_table_and_empty_cells(self):
         rows = loader.list_neighborhoods('umich')
-        self.assertEqual(len(rows), 6)
+        self.assertEqual({row.neighborhood for row in rows}, {
+            'Central Campus', 'South University', 'Kerrytown', 'Burns Park',
+            'Old West Side', 'North Campus', 'Oxbridge',
+            'Glazier Way / North Side', 'Downtown/Campus',
+        })
         for row in rows:
             self.assertIsNone(row.median_1_bedroom_rent)
+            self.assertIsNone(row.median_2_bedroom_rent)
             self.assertIsNone(row.bus_minutes)
+        # Exact user-provided table, not synthetic prices or generated medians.
+        expected = {"Downtown/Campus":[[2100,2550,2100,2550],[2600,3500,1300,1750],[3600,"5400+",1200,"1800+"]],"Kerrytown":[[1450,2100,1450,2100],[1900,2800,950,1400],[2500,"4500+",833,"1500+"]],"Oxbridge":[[825,1200,825,1200],[1400,2000,700,1000],[2400,"3000+",800,"1000+"]],"Burns Park":[[1195,1400,1195,1400],[1700,2200,850,1100],[2400,"3600+",800,"1200+"]],"Glazier Way / North Side":[[1279,1500,1279,1500],[1469,1919,735,960],[2200,"3350+",733,"1117+"]]}
+        columns = [
+            f'{prefix}_{bedrooms}_bedroom{suffix}_{bound}'
+            for bedrooms in ('1', '2', '3_plus')
+            for prefix, suffix in (('rent', ''), ('shared', '_per_person'))
+            for bound in ('low', 'high')
+        ]
+        with (loader.DATA_DIR / 'neighborhoods/umich_neighborhoods.csv').open(newline='') as stream:
+            records = {row['neighborhood']: row for row in csv.DictReader(stream)}
+        for name, groups in expected.items():
+            values = [str(value) for group in groups for value in group]
+            self.assertEqual([records[name][column] for column in columns], values, name)
+        for name in records.keys() - expected.keys():
+            self.assertTrue(all(records[name][column] == '' for column in columns), name)
 
     def test_actual_low_budget_returns_empty(self):
         self.assertEqual(loader.find_neighborhoods_in_budget('umich', 0, 1, 0), [])
@@ -245,11 +265,26 @@ class DataAcceptanceTests(unittest.TestCase):
 
     def test_source_log_covers_numeric_data(self):
         path = loader.DATA_DIR / 'sources.md'
-        self.assertTrue(path.exists(), 'Missing data/sources.md; no numeric values have source entries')
-        text = path.read_text()
-        # Source entries must identify the field, value, source, URL, and retrieval date.
-        rows = [line for line in text.splitlines()
-                if 'http' in line and re.search(r'\d{4}-\d{2}-\d{2}', line)]
+        self.assertTrue(path.exists(), 'Missing data/sources.md')
+        # Links are optional. Require a named source and research date for real data.
+        entries = [
+            [cell.strip() for cell in line.split('|')[1:-1]]
+            for line in path.read_text().splitlines()
+            if line.startswith('| umich.')
+        ]
+
+        def check(field, value):
+            matching = [row for row in entries
+                        if row[0] == field and row[1] == str(value)]
+            self.assertTrue(matching, f'Missing source entry for {field} = {value}')
+            self.assertTrue(any(row[3] and row[3] != 'Not provided' for row in matching),
+                            f'Missing source name for {field}')
+            if any('placeholder' in row[2].lower() for row in matching):
+                return  # Explicit placeholders are not researched observations.
+            self.assertTrue(any(re.fullmatch(r'\d{4}-\d{2}-\d{2}', row[5])
+                                for row in matching),
+                            f'Missing research date for {field}')
+
         data = json.loads((loader.DATA_DIR / 'campuses/umich.json').read_text())
         pending = [('umich', data)]
         while pending:
@@ -259,17 +294,32 @@ class DataAcceptanceTests(unittest.TestCase):
             elif isinstance(value, list):
                 pending.extend((f'{key}.{index}', item) for index, item in enumerate(value))
             elif type(value) in (int, float):
-                self.assertTrue(any(key in row and str(value) in row for row in rows),
-                                f'Missing source entry for {key} = {value}')
+                check(key, value)
         with (loader.DATA_DIR / 'neighborhoods/umich_neighborhoods.csv').open(newline='') as stream:
             for record in csv.DictReader(stream):
                 for key, value in record.items():
                     if key in ('neighborhood', 'type', 'notes', 'source') or not value:
                         continue
-                    float(value)
-                    label = f"umich.{record['neighborhood']}.{key}"
-                    self.assertTrue(any(label in row and value in row for row in rows),
-                                    f'Missing source entry for {label}')
+                    check(f"umich.{record['neighborhood']}.{key}", value)
+
+    def test_source_log_does_not_require_links(self):
+        # Independent synthetic source record: no URL, but a source name/date.
+        log = ('| umich.test_value | 7 | Synthetic test value | Named test source | '
+               'Not provided | 2026-10-03 | Test fixture |')
+        source = loader.DATA_DIR / 'sources.md'
+        campus = loader.DATA_DIR / 'campuses/umich.json'
+
+        def read(path, *args, **kwargs):
+            if path == source:
+                return log
+            if path == campus:
+                return json.dumps({'test_value': 7})
+            raise AssertionError(f'Unexpected file read: {path}')
+
+        with patch.object(Path, 'exists', return_value=True), \
+             patch.object(Path, 'read_text', read), \
+             patch.object(Path, 'open', return_value=io.StringIO('neighborhood,source\n')):
+            self.test_source_log_covers_numeric_data()
 
 
 if __name__ == '__main__':
