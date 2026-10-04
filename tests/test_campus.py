@@ -265,21 +265,36 @@ class DataAcceptanceTests(unittest.TestCase):
                     self.assertEqual(result['low'], low)
                     self.assertEqual(result['expected'], (low + upper) / 2)
                     self.assertEqual(result['high'],
-                                     None if month in ('january', 'february', 'december') else upper)
+                                     upper)
         self.assertEqual(loader.estimate_utilities('umich', 'january', 0, 0),
                          loader.estimate_utilities('umich', 'january', 1, 0))
         self.assertEqual(loader.estimate_utilities('umich', 'january', 4, 0),
                          loader.estimate_utilities('umich', 'january', 3, 0))
 
-    def test_actual_utility_shares_are_not_assumed(self):
-        with self.assertRaisesRegex(ValueError, 'shares are user-defined'):
-            loader.estimate_utilities('umich', 'january', 1, 1)
+    def test_actual_utility_shares_follow_approved_50_50(self):
+        solo = loader.estimate_utilities('umich', 'january', 1, 0)
+        shared = loader.estimate_utilities('umich', 'january', 1, 1)
+        self.assertEqual(shared, {key: value / 2 for key, value in solo.items()})
+        with self.assertRaisesRegex(ValueError, 'configured number of occupants'):
+            loader.estimate_utilities('umich', 'january', 1, 2)
+
+    def test_apartment_bedrooms_and_fixed_assumptions(self):
+        result = loader.estimate_true_monthly_cost('umich', 100, 1, month='january', bedrooms=2)
+        for key in ('low', 'expected', 'high'):
+            self.assertEqual(result['items']['groceries'][key], 385.5)
+            self.assertEqual(result['items']['renters_insurance'][key], 10)
+        self.assertEqual(result['items']['internet'], {'low': 20, 'expected': 32.5, 'high': 45})
+        self.assertEqual(result['items']['utilities'], {'low': 165, 'expected': 182.5, 'high': 200})
+        with self.assertRaisesRegex(ValueError, 'apartment bedroom count'):
+            loader.estimate_true_monthly_cost('umich', 100, 1, month='january')
+        studio = loader.estimate_true_monthly_cost('umich', 100, 1, month='january', bedrooms=0)
+        self.assertNotEqual(studio['items']['utilities'], result['items']['utilities'])
 
     def test_actual_low_budget_returns_empty(self):
         self.assertEqual(loader.find_neighborhoods_in_budget('umich', 0, 1, 0), [])
 
     def test_actual_monthly_total_is_sum(self):
-        result = loader.estimate_true_monthly_cost('umich', 100, month='january')
+        result = loader.estimate_true_monthly_cost('umich', 100, month='january', bedrooms=2)
         for key in ('low', 'expected', 'high'):
             self.assertEqual(result['total'][key],
                              sum(item[key] for item in result['items'].values()))
@@ -292,8 +307,8 @@ class DataAcceptanceTests(unittest.TestCase):
         self.assertGreater(summer['expected'], spring['expected'])
 
     def test_actual_roommate_reduces_cost(self):
-        alone = loader.estimate_true_monthly_cost('umich', 100, 0, month='january')
-        shared = loader.estimate_true_monthly_cost('umich', 100, 1, month='january')
+        alone = loader.estimate_true_monthly_cost('umich', 100, 0, month='january', bedrooms=2)
+        shared = loader.estimate_true_monthly_cost('umich', 100, 1, month='january', bedrooms=2)
         self.assertLess(shared['total']['expected'], alone['total']['expected'])
 
     def test_source_log_covers_numeric_data(self):
