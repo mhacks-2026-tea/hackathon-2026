@@ -202,3 +202,29 @@ For the existing fictional Alex Demo account, set `FINANCE_HISTORY_START=2026-10
 ### TypeScript migration
 
 All active campus helper functions now use camelCase exports from `campus/loader.ts`: `getCampusProfile`, `listNeighborhoods`, `getRentBenchmark`, `findNeighborhoodsInBudget`, `estimateUtilities`, `estimateCommuteCost`, and `estimateTrueMonthlyCost`. JSON/CSV field names and returned cost shapes are preserved. `estimateTrueMonthlyCost` accepts the object shown above. The public `evaluateCampusNessieAffordability` call is unchanged. Remove any old `CAMPUS_PYTHON` setting; it is no longer read.
+
+
+## Learned spending and finance agent
+
+`src/lib/finance/spending-model.ts` adds regularized weekday regression using up to 84 complete observed days. It implements the existing `SpendingForecast` contract and excludes income and scheduled expenses. Under 28 days it falls back to the baseline. Bounds describe training residual variation, not calibrated probabilities.
+
+`evaluateSpendingModel(profile)` compares baseline and learned forecasts using expanding chronological training windows and disjoint 14-day holdouts. It reports daily MAE/RMSE in cents, improvement percentage, and a recommended method. `selectSpendingForecast(profile, days)` uses ML only when its historical MAE beats the baseline; ties or insufficient evaluation history retain the baseline. At least 42 days are needed for one evaluation fold. Model selection on these same folds is not an independent final test.
+
+`runFinanceAgent` supports spending forecasts, historical summaries, and housing affordability. It requests missing profile/listing fields before calculation, accepts explicit zero costs, and calls the existing engine with the selected forecast. Keep `previousIntent` when responding to clarification, and merge the supplied structured details into the next request. Invalid inputs and model/API errors propagate to the calling route. That route must authorize access to the supplied financial profile.
+
+```ts
+import { runFinanceAgent, createModelInterpreter } from './src/lib/finance/agent.ts';
+
+// Provide your server-side AI provider's text completion function.
+// No provider SDK or API key is bundled or configured by this module.
+const interpret = createModelInterpreter(async prompt => yourModel.complete(prompt));
+const response = await runFinanceAgent({
+  question: 'How much will I spend over the next 14 days?',
+  profile, // Existing FinancialProfile, with amounts in integer cents.
+}, interpret);
+// response.message, missingFields, toolCalls, result, assumptions
+```
+
+Only the question goes to the model; the interpreter classifies intent and horizon. Financial numbers are supplied as structured context and calculated by the engine. Explanations use actual tool outputs, including warnings and assumptions. Without an injected interpreter, a documented keyword parser supports offline demos; that fallback is not an LLM. This is a server-side library entry point, not a deployed chat UI or API route. Amounts in conversational follow-ups must be confirmed and converted into structured cent fields by the caller.
+
+Verification: `npm run test:spending-agent` (included in `test:all`). Synthetic 84-day weekday data yielded baseline MAE $16.00/day versus learned MAE $3.80/day (76.25% reduction) across 56 held-out days; constant spending tied at zero error and retained baseline. These are synthetic behavior checks, not measured performance on student banking history. Live model-provider behavior has not been verified; tests use a mock completion.
