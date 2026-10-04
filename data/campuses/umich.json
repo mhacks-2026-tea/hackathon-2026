@@ -17,8 +17,8 @@
     "december": 0
   },
   "internet": 0,
-  "renters_insurance": 16,
-  "groceries": 0,
+  "renters_insurance": 10,
+  "groceries": 771,
   "security_deposit_months": 0,
   "application_fee": 0,
   "parking": 0,
@@ -34,16 +34,26 @@
     "high": 90
   },
   "books_and_supplies": 1200,
-  "winter_semester_start": "January 13",
+  "winter_semester_start": "2027-01-13",
   "fall_break": {
-    "start": "October 19",
-    "end": "October 20"
+    "start": "2026-10-19",
+    "end": "2026-10-20"
   },
   "security_deposit_legal_max_months": 1.5,
   "security_deposit_notes": "Legal ceiling, not the typical deposit. First month's rent is not part of the security deposit.",
   "student_fare_notes": "Active students with a yellow MCard have unlimited access to TheRide's fixed-route buses because U-M pays the fares.",
   "commute_cost_ranges": {
     "bus": {
+      "low": 0,
+      "expected": 0,
+      "high": 0
+    },
+    "walk": {
+      "low": 0,
+      "expected": 0,
+      "high": 0
+    },
+    "bike": {
       "low": 0,
       "expected": 0,
       "high": 0
@@ -56,5 +66,29 @@
     "low": 1200,
     "high": 2500
   },
-  "rent_range_notes": "User-provided typical range depending on apartment location and number of roommates; neighborhood, bedroom count, and per-apartment versus per-person basis not specified."
+  "rent_range_notes": "User-provided typical range depending on apartment location and number of roommates; neighborhood, bedroom count, and per-apartment versus per-person basis not specified.",
+  "monthly_utilities_average": 360,
+  "monthly_utilities_average_basis": "Per apartment, as specified by user; roommates decide the split. Source utilities category includes internet/phone, so avoid double-counting separate internet until coverage is confirmed.",
+  "internet_sharing": "Roommates decide the split; no equal-split default is supplied.",
+  "renters_insurance_basis": "Per roommate; user-reported average. Supplied Forbes URL is a car-insurance landing page and does not verify this renters-insurance amount.",
+  "groceries_basis": "User reports a single-person monthly average; roommates decide how shared grocery expenses are split.",
+  "car_transportation_average": 345,
+  "car_transportation_average_notes": "User-reported monthly car transportation average. Linked source lists a general renter transportation average; car-specific scope and whether parking is included are not established.",
+  "application_fee_legal_max": 50,
+  "application_fee_legal_max_notes": "Ann Arbor ordinance ORD-24-33 cap; not a typical fee. The ordinance lists exemptions and applies to covered leases.",
+  "security_deposit_range": {
+    "low": 200,
+    "high": 500
+  },
+  "security_deposit_range_notes": "User-reported dollar range from Rambler Ann Arbor; not months of rent and not a city-wide legal limit. Roommates typically split this cost; shares unspecified.",
+  "commute_cost_notes": {
+    "walk": "User reports free.",
+    "bike": "User reports free; equipment/maintenance not specified.",
+    "bus": "Free for eligible active U-M students with yellow MCard on TheRide fixed-route buses."
+  },
+  "academic_period": {
+    "start": "2026-08",
+    "end": "2027-04"
+  },
+  "books_and_supplies_period": "August 2026 to April 2027"
 }
