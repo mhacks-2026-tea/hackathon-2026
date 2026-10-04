@@ -72,6 +72,7 @@ export interface Neighborhood {
 }
 
 export interface DashboardData {
+  assistantMode?: 'asi' | 'offline';
   source?: string;
   notices?: string[];
   campus: CampusProfile;
