@@ -21,9 +21,9 @@ from campus import loader
 def synthetic_profile():
     """Arbitrary test inputs only; never copied to production data."""
     data = {
-        'id': 'test', 'name': 'Test campus', 'city': 'Test city', 'county': '',
+        'id': 'test', 'name': 'Test campus', 'city': 'Test city', 'county': '', 'state': 'Test state',
         'term_start_dates': {}, 'typical_lease_start_window': {},
-        'student_fare_notes': '', 'summer_income_gap_months': 0,
+        'student_fare_notes': 'Test eligibility', 'summer_income_gap_months': 0,
         'monthly_utilities_by_month': {
             month.lower(): 0 for month in list(loader.calendar.month_name)[1:]
         },
@@ -50,7 +50,7 @@ def synthetic_profile():
         },
         'commute_cost_ranges': {
             method: {'low': 10, 'expected': 20, 'high': 30}
-            for method in ('walk', 'bike', 'bus', 'car')
+            for method in ('walk', 'bike', 'bus')
         },
     }
     return data
@@ -60,7 +60,7 @@ class LogicTests(unittest.TestCase):
     def test_all_contract_functions_exist(self):
         for name in (
             'get_campus_profile', 'list_neighborhoods', 'get_rent_benchmark',
-            'estimate_utilities', 'estimate_move_in_cost', 'estimate_commute_cost',
+            'estimate_utilities', 'estimate_commute_cost',
             'estimate_true_monthly_cost', 'find_neighborhoods_in_budget',
         ):
             self.assertTrue(callable(getattr(loader, name, None)), name)
@@ -75,73 +75,15 @@ class LogicTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, re.escape(field.name)):
                     loader.get_campus_profile('test')
 
-    def test_profile_shape_and_zero_placeholders(self):
-        data = synthetic_profile()
-        with patch.object(loader.Path, 'open', return_value=io.StringIO(json.dumps(data))):
-            profile = loader.get_campus_profile('test')
-        self.assertIsInstance(profile, loader.CampusProfile)
-        self.assertEqual(profile.internet, 0)
 
-    def test_missing_utility_month_is_named(self):
-        data = synthetic_profile()
-        del data['monthly_utilities_by_month']['january']
-        with patch.object(loader.Path, 'open', return_value=io.StringIO(json.dumps(data))):
-            with self.assertRaisesRegex(ValueError, 'monthly_utilities_by_month.january'):
-                loader.get_campus_profile('test')
 
     def test_missing_csv_header_is_named(self):
         with patch.object(loader.Path, 'open', return_value=io.StringIO('neighborhood\nTest\n')):
-            with self.assertRaisesRegex(ValueError, 'median_1_bedroom_rent'):
+            with self.assertRaisesRegex(ValueError, 'source'):
                 loader.list_neighborhoods('test')
 
-    def test_blank_and_short_rows_do_not_become_zero(self):
-        text = (
-            'neighborhood,median_1_bedroom_rent,median_2_bedroom_rent,'
-            'rent_per_bedroom_shared,walk_minutes,bike_minutes,bus_minutes,source\n'
-            'Empty,,,,,,,\n'
-            'Short\n'
-        )
-        with patch.object(loader.Path, 'open', side_effect=lambda *a, **k: io.StringIO(text)):
-            rows = loader.list_neighborhoods('test')
-            self.assertEqual(len(rows), 2)
-            self.assertIsNone(rows[0].median_1_bedroom_rent)
-            self.assertIsNone(rows[1].bus_minutes)
-            self.assertEqual(loader.find_neighborhoods_in_budget('test', 999, 1, 999), [])
-            self.assertEqual(loader.get_rent_benchmark('test', 1),
-                             {'low': None, 'median': None, 'high': None})
 
-    def test_rent_and_budget_boundaries(self):
-        text = (
-            'neighborhood,median_1_bedroom_rent,median_2_bedroom_rent,'
-            'rent_per_bedroom_shared,walk_minutes,bike_minutes,bus_minutes,source\n'
-            'A,100,200,50,20,,,test\n'
-            'B,300,400,150,,,10,test\n'
-            'No commute,200,,100,,,,test\n'
-            'Zero placeholder,0,,0,0,,,test\n'
-        )
-        with patch.object(loader.Path, 'open', side_effect=lambda *a, **k: io.StringIO(text)):
-            self.assertEqual(loader.get_rent_benchmark('test', 1),
-                             {'low': 100, 'median': 200, 'high': 300})
-            self.assertEqual(loader.get_rent_benchmark('test', 2, shared=True),
-                             {'low': 50, 'median': 100, 'high': 150})
-            self.assertEqual(loader.get_rent_benchmark('test', 2),
-                             {'low': 200, 'median': 300, 'high': 400})
-            self.assertEqual(loader.find_neighborhoods_in_budget('test', 0, 1, 999), [])
-            matches = loader.find_neighborhoods_in_budget('test', 100, 1, 20)
-            self.assertEqual([row.neighborhood for row in matches], ['A'])
-            # Missing commute for a candidate must not masquerade as no match.
-            with self.assertRaisesRegex(ValueError, 'Missing commute minutes'):
-                loader.find_neighborhoods_in_budget('test', 999, 1, 999)
 
-    def test_move_in_total_and_shape(self):
-        with patch.object(loader, '_load_cost_data', return_value=synthetic_profile()):
-            result = loader.estimate_move_in_cost('test', 100, extras=5)
-        self.assertEqual(result['items'],
-                         {'security_deposit': 200, 'first_month_rent': 100,
-                          'application_fee': 30, 'extras': 5})
-        self.assertEqual(result['total'], 335)
-        self.assertEqual(result['total'], sum(result['items'].values()))
-        self.assertEqual(result['data_status'], 'placeholder')
 
     def test_utilities_ranges_and_roommates(self):
         with patch.object(loader, '_load_cost_data', return_value=synthetic_profile()):
@@ -150,7 +92,7 @@ class LogicTests(unittest.TestCase):
 
     def test_commute_methods(self):
         with patch.object(loader, '_load_cost_data', return_value=synthetic_profile()):
-            for method in ('walk', 'bike', 'bus', 'car'):
+            for method in ('walk', 'bike', 'bus'):
                 self.assertEqual(loader.estimate_commute_cost('test', method),
                                  {'low': 10, 'expected': 20, 'high': 30})
 
@@ -220,14 +162,11 @@ class DataAcceptanceTests(unittest.TestCase):
     def test_actual_neighborhood_table_and_empty_cells(self):
         rows = loader.list_neighborhoods('umich')
         self.assertEqual({row.neighborhood for row in rows}, {
-            'Central Campus', 'South University', 'Kerrytown', 'Burns Park',
-            'Old West Side', 'North Campus', 'Oxbridge',
+            'Kerrytown', 'Burns Park', 'Oxbridge',
             'Glazier Way / North Side', 'Downtown/Campus',
         })
         for row in rows:
-            self.assertIsNone(row.median_1_bedroom_rent)
-            self.assertIsNone(row.median_2_bedroom_rent)
-            self.assertIsNone(row.bus_minutes)
+            self.assertTrue(row.rent_ranges)
         # Exact user-provided table, not synthetic prices or generated medians.
         expected = {"Downtown/Campus":[[2100,2550,2100,2550],[2600,3500,1300,1750],[3600,"5400+",1200,"1800+"]],"Kerrytown":[[1450,2100,1450,2100],[1900,2800,950,1400],[2500,"4500+",833,"1500+"]],"Oxbridge":[[825,1200,825,1200],[1400,2000,700,1000],[2400,"3000+",800,"1000+"]],"Burns Park":[[1195,1400,1195,1400],[1700,2200,850,1100],[2400,"3600+",800,"1200+"]],"Glazier Way / North Side":[[1279,1500,1279,1500],[1469,1919,735,960],[2200,"3350+",733,"1117+"]]}
         columns = [
@@ -293,7 +232,7 @@ class DataAcceptanceTests(unittest.TestCase):
         self.assertNotEqual(studio['items']['utilities'], result['items']['utilities'])
 
     def test_actual_low_budget_returns_empty(self):
-        self.assertEqual(loader.find_neighborhoods_in_budget('umich', 0, 1, 0), [])
+        self.assertEqual(loader.find_neighborhoods_in_budget('umich', 0, 1), [])
 
     def test_actual_monthly_total_is_sum(self):
         result = loader.estimate_true_monthly_cost('umich', 100, month='january', bedrooms=2)
