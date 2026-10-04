@@ -90,5 +90,13 @@
     "start": "2026-08",
     "end": "2027-04"
   },
-  "books_and_supplies_period": "August 2026 to April 2027"
+  "books_and_supplies_period": "August 2026 to April 2027",
+  "id": "umich",
+  "name": "University of Michigan",
+  "county": "",
+  "term_start_dates": {
+    "winter": "2027-01-13"
+  },
+  "typical_lease_start_window": {},
+  "metadata_notes": "County and typical lease start window are not provided; empty values are explicit placeholders. Winter start uses the date and academic period supplied by the user."
 }
