@@ -9,6 +9,7 @@ import { runFinanceAgent } from '../../src/lib/finance/agent';
 import { selectSpendingForecast } from '../../src/lib/finance/spending-model';
 import { listNeighborhoods } from '../../campus/loader';
 import { alexDemoProfile } from './demo-profile';
+import { webQuestionInterpreter } from './asi';
 import type { FinancialProfile, HousingScenario as EngineHousing } from '../../src/lib/finance/types';
 import type { HousingQuery, HousingScenario, CashFlowPoint } from '../types';
 import type { CampusDashboardData, CampusId } from '../frontend/campus-types';
@@ -134,7 +135,7 @@ export async function dashboard(id: CampusId): Promise<CampusDashboardData> {
   const neighborhoods = id === 'michigan' ? listNeighborhoods('umich').map((n, i) => ({ id: `umich-${i}`, name: n.neighborhood, typicalRent: n.rent_ranges['1']?.low ?? campus.rentBenchmarks.typical, commute: 'Commute time unavailable', note: n.notes, studentFit: 'Campus rent benchmark' })) : campus.neighborhoods;
   const mapped = await Promise.all(neighborhoods.map(async n => { const s = await make(n.typicalRent, 0, n.id); return { ...n, estimatedMonthlyCost: s.monthlyCost, status: s.status }; }));
   const built = await buildHousing(id, { monthlyRent: campus.rentBenchmarks.typical, roommates: 0 }, context.profile);
-  return { campus, source: context.source, notices: [...context.notices, ...built.notices, `Historical averages: ${history.historyStartDate} to ${history.historyEndDate}. Future paydays are modeled separately. Chart shows each month's lowest daily balance.`, 'University housing and representative property rents are sample assumptions.'],
+  return { campus, source: context.source, assistantMode: webQuestionInterpreter().mode, notices: [...context.notices, ...built.notices, `Historical averages: ${history.historyStartDate} to ${history.historyEndDate}. Future paydays are modeled separately. Chart shows each month's lowest daily balance.`, 'University housing and representative property rents are sample assumptions.'],
     financials: { currentBalance: context.profile.availableBalanceCents / 100, monthlyIncome: avg('incomeCents'), monthlySpending: avg('expenseCents'), safetyBuffer: context.profile.safetyBufferCents / 100 },
     affordability: scenarios[0].result, cashFlow: scenarios[0].cashFlow, scenarios, neighborhoods: mapped,
     rentEstimates: await Promise.all([campus.rentBenchmarks.low, campus.rentBenchmarks.typical, campus.rentBenchmarks.high].map(async rent => ({ monthlyRent: rent, result: (await make(rent, 0, 'estimate')).result }))) };
@@ -142,9 +143,14 @@ export async function dashboard(id: CampusId): Promise<CampusDashboardData> {
 
 export async function ask(id: CampusId, query: HousingQuery, question: string) {
   if (typeof question !== 'string' || !question.trim() || question.length > 8000) throw new InputError('Enter a question of 1 to 8,000 characters.');
+  const { interpret, mode } = webQuestionInterpreter();
+  let parsed;
+  try { parsed = await interpret(question); }
+  catch (error) { throw new InputError(error instanceof Error ? error.message : 'ASI could not understand that question. Please retry.'); }
+  if (parsed.intent === 'unknown') return { id: `assistant-${Date.now()}`, role: 'assistant', createdAt: 'Now', content: 'I couldn’t understand that as a financial question. Ask about apartment rent, roommates, move-in savings, spending, or a month in your forecast.', mode };
   const rent = question.match(/(?:\$|rent\s+(?:of\s+)?)([\d,]+)(?:\.\d+)?/i);
   const followup = { ...query, ...(rent ? { monthlyRent: Number(rent[1].replaceAll(',', '')) } : {}), ...(/roommate/i.test(question) ? { roommates: Math.max(1, query.roommates) } : {}) };
   const context = await analyze(id, followup);
-  const agent = await runFinanceAgent({ question, profile: context.profile, housing: context.housing, previousIntent: 'affordability' });
+  const agent = await runFinanceAgent({ question, profile: context.profile, housing: context.housing }, async () => parsed);
   return { id: `assistant-${Date.now()}`, role: 'assistant', createdAt: 'Now', content: `${campusFor(id).name}: ${agent.message} Risk months: ${context.scenario.result.riskMonths.join(', ') || 'none'}. ${context.notices.join(' ')}`, scenario: context.scenario };
 }

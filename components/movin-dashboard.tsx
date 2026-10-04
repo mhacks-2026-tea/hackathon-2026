@@ -1323,7 +1323,7 @@ function ChatExperience({
                 </li>
               ))}
             </ul>
-            <p className="chat-demo-note">Ask Movin uses the server finance agent and your selected housing plan. Offline question interpretation; calculated financial answers.</p>
+            <p className="chat-demo-note">{data.assistantMode === 'asi' ? 'ASI interprets your question; the finance engine calculates the answer.' : 'Offline finance assistant · ASI is not configured. Ask about rent, roommates, spending, or your forecast.'}</p>
           </div>
         ) : (
           <div className="chat-messages" aria-live="polite" aria-busy={isSending}>
