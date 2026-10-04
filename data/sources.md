@@ -1,43 +1,81 @@
 # UMich source log
 
-Only figures supplied by the user are recorded. No external verification was performed. Sources are attributed only as described by the user. Source URLs and date found were not supplied; neither is invented. Figures received in this chat on 2026-10-03; that is not asserted to be the research date.
+Values are user-provided unless marked verified below. No missing low/high/expected values or sharing percentages have been invented. The user confirmed that the figures in the latest research batch were found on 2026-10-03. Older unlinked figures and original placeholders retain unspecified research dates. Verification dates are separate and do not claim when the user researched a value. Original placeholders remain placeholders.
 
-Averages are not low/expected/high ranges. Month-specific utility values remain placeholders. The deposit ceiling is separate from the typical-deposit placeholder. Internet and rent have no supplied expected/median value. No neighborhood-specific rent or commute numbers were supplied. The books-and-supplies period and calendar year are unspecified.
+Utilities: user approved updating the figure to 360, matching Apartments.com and its utilities definition includes internet/phone. Do not silently replace the user's figure or add separate internet to an overlapping total. Insurance: the supplied Forbes URL is a car-insurance page and does not substantiate the renters-insurance average. Transportation: 345 is listed as general renter transportation, not a car-only estimate. The application fee 50 is a legal cap, not a typical fee; exceptions appear in the ordinance. Deposit 200-500 is user-attributed to Rambler and requires a specific link; it is separate from the previously supplied 1.5-month legal ceiling.
 
-| Field | Value | Meaning | Source reported by user | Source URL | Date found |
-| --- | --- | --- | --- | --- | --- |
-| umich.monthly_utility_averages.electric | 202 | Monthly average electric cost | User research; underlying source not named | Not provided | Not provided |
-| umich.monthly_utility_averages.water | 28 | Monthly average water cost | User research; underlying source not named | Not provided | Not provided |
-| umich.monthly_utility_averages.sewer | 50 | Monthly average sewer cost | User research; underlying source not named | Not provided | Not provided |
-| umich.internet_range.low | 40 | Monthly internet range minimum | City of Ann Arbor, as reported by user | Not provided | Not provided |
-| umich.internet_range.high | 90 | Monthly internet range maximum; provider-dependent | City of Ann Arbor, as reported by user | Not provided | Not provided |
-| umich.renters_insurance | 16 | Monthly average renters insurance | User research; underlying source not named | Not provided | Not provided |
-| umich.books_and_supplies | 1200 | Books and supplies; covered period not supplied | University of Michigan, as reported by user | Not provided | Not provided |
-| umich.winter_semester_start | January 13 | Winter semester start; year not supplied | User research; underlying source not named | Not provided | Not provided |
-| umich.fall_break.start | October 19 | Fall break start; year not supplied | User research; underlying source not named | Not provided | Not provided |
-| umich.fall_break.end | October 20 | Fall break end; year not supplied | User research; underlying source not named | Not provided | Not provided |
-| umich.security_deposit_legal_max_months | 1.5 | Legal ceiling in months of rent, not a typical deposit; first month rent separate | User research; legal source not named | Not provided | Not provided |
-| umich.bus_pass | 0 | Monthly bus fare for active U-M students with yellow MCard; fixed-route TheRide service; U-M pays fares | U-M/TheRide program, as reported by user | Not provided | Not provided |
-| umich.commute_cost_ranges.bus.low | 0 | Same exact eligible-student bus fare, not a generated uncertainty range | U-M/TheRide program, as reported by user | Not provided | Not provided |
-| umich.commute_cost_ranges.bus.expected | 0 | Same exact eligible-student bus fare, not a generated uncertainty range | U-M/TheRide program, as reported by user | Not provided | Not provided |
-| umich.commute_cost_ranges.bus.high | 0 | Same exact eligible-student bus fare, not a generated uncertainty range | U-M/TheRide program, as reported by user | Not provided | Not provided |
-| umich.rent_range.low | 1200 | Typical rent range minimum; location/roommates affect rent; allocation basis unspecified | User research; underlying source not named | Not provided | Not provided |
-| umich.rent_range.high | 2500 | Typical rent range maximum; no neighborhood or bedroom mapping supplied | User research; underlying source not named | Not provided | Not provided |
-| umich.monthly_utilities_by_month.january | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.monthly_utilities_by_month.february | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.monthly_utilities_by_month.march | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.monthly_utilities_by_month.april | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.monthly_utilities_by_month.may | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.monthly_utilities_by_month.june | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.monthly_utilities_by_month.july | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.monthly_utilities_by_month.august | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.monthly_utilities_by_month.september | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.monthly_utilities_by_month.october | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.monthly_utilities_by_month.november | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.monthly_utilities_by_month.december | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.internet | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.groceries | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.security_deposit_months | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.application_fee | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.parking | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
-| umich.summer_income_gap_months | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided |
+Neighborhoods: the user confirmed that the left column is overall average-rent range and the right column is shared rent per person. Finite endpoints are recorded in dedicated range columns without inventing medians or bedroom-specific figures. The user confirmed that the first row is Downtown/Campus; its '+' bounds are preserved in notes and finite upper range columns remain blank. The user confirmed that North Burns Park maps to Burns Park.
+
+| Field | Value | Meaning | Source | Source URL | Date found | Verification |
+| --- | --- | --- | --- | --- | --- | --- |
+| umich.monthly_utility_averages.electric | 202 | Monthly average electric cost | User research; underlying source not named | Not provided | Not provided | Not checked |
+| umich.monthly_utility_averages.water | 28 | Monthly average water cost | User research; underlying source not named | Not provided | Not provided | Not checked |
+| umich.monthly_utility_averages.sewer | 50 | Monthly average sewer cost | User research; underlying source not named | Not provided | Not provided | Not checked |
+| umich.internet_range.low | 40 | Monthly internet endpoint; no expected value or automatic sharing rule | Utility Rates | https://utility-rates.com/michigan/ann-arbor/internet-providers | 2026-10-03 | 2026-10-03: page requires address-specific plan lookup; endpoints not confirmed in static page |
+| umich.internet_range.high | 90 | Monthly internet endpoint; no expected value or automatic sharing rule | Utility Rates | https://utility-rates.com/michigan/ann-arbor/internet-providers | 2026-10-03 | 2026-10-03: page requires address-specific plan lookup; endpoints not confirmed in static page |
+| umich.renters_insurance | 10 | Monthly per-roommate average; supersedes earlier user-reported 16 | Forbes URL supplied by user | https://www.forbes.com/advisor/journey/sp/car-insurance-splash | 2026-10-03 | 2026-10-03: URL is for car insurance; renters figure not verified |
+| umich.books_and_supplies | 1200 | Books and supplies for August 2026-April 2027 | University of Michigan, as reported by user | Not provided | 2026-10-03 | Not independently verified; source URL needed |
+| umich.winter_semester_start | 2027-01-13 | January date assigned to provided August 2026-April 2027 period | User report | Not provided | 2026-10-03 | Not independently verified |
+| umich.fall_break.start | 2026-10-19 | Fall break start in supplied academic period | User report | Not provided | 2026-10-03 | Not independently verified |
+| umich.fall_break.end | 2026-10-20 | Fall break end in supplied academic period | User report | Not provided | 2026-10-03 | Not independently verified |
+| umich.security_deposit_legal_max_months | 1.5 | Legal ceiling in months of rent, not a typical deposit; first month rent separate | User research; legal source not named | Not provided | Not provided | Not checked |
+| umich.bus_pass | 0 | Monthly bus fare for active U-M students with yellow MCard; fixed-route TheRide service; U-M pays fares | U-M/TheRide program, as reported by user | Not provided | Not provided | Not checked |
+| umich.commute_cost_ranges.bus.low | 0 | Same exact eligible-student bus fare, not a generated uncertainty range | U-M/TheRide program, as reported by user | Not provided | Not provided | Not checked |
+| umich.commute_cost_ranges.bus.expected | 0 | Same exact eligible-student bus fare, not a generated uncertainty range | U-M/TheRide program, as reported by user | Not provided | Not provided | Not checked |
+| umich.commute_cost_ranges.bus.high | 0 | Same exact eligible-student bus fare, not a generated uncertainty range | U-M/TheRide program, as reported by user | Not provided | Not provided | Not checked |
+| umich.rent_range.low | 1200 | Typical rent range minimum; location/roommates affect rent; allocation basis unspecified | User research; underlying source not named | Not provided | Not provided | Not checked |
+| umich.rent_range.high | 2500 | Typical rent range maximum; no neighborhood or bedroom mapping supplied | User research; underlying source not named | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.january | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.february | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.march | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.april | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.may | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.june | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.july | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.august | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.september | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.october | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.november | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_by_month.december | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.internet | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.groceries | 771 | Monthly single-person average reported by user; any roommate pooling is user-decided | Apartments.com | https://www.apartments.com/cost-of-living/ann-arbor-mi/ | 2026-10-03 | 2026-10-03: page lists renter groceries 771; sharing not established by source |
+| umich.security_deposit_months | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.application_fee | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.parking | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.summer_income_gap_months | 0 | Unchanged placeholder; not researched data | Original user placeholder instruction | Not provided | Not provided | Not checked |
+| umich.monthly_utilities_average | 360 | Monthly per-apartment average per user; split decided by roommates; no seasonal/bedroom range | Apartments.com | https://www.apartments.com/cost-of-living/ann-arbor-mi/ | 2026-10-03 | 2026-10-03: 360 confirmed; utilities definition includes internet/phone |
+| umich.car_transportation_average | 345 | User-reported monthly car cost; source lists general renter transportation | Apartments.com | https://www.apartments.com/cost-of-living/ann-arbor-mi/ | 2026-10-03 | 2026-10-03: transportation figure confirmed; car-only scope unconfirmed |
+| umich.application_fee_legal_max | 50 | Legal maximum, not typical cost; ordinance exemptions apply | Ann Arbor ORD-24-33 | https://www.a2gov.org/media/hp4abt2b/ord-24-33-approval-notice.pdf | 2026-10-03 | 2026-10-03: verified in section 4(d) |
+| umich.security_deposit_range.low | 200 | User-reported dollar deposit endpoint; property-specific scope not established; shares unspecified | Rambler Ann Arbor, as reported by user | Not provided | 2026-10-03 | Not checked; specific source page needed |
+| umich.security_deposit_range.high | 500 | User-reported dollar deposit endpoint; property-specific scope not established; shares unspecified | Rambler Ann Arbor, as reported by user | Not provided | 2026-10-03 | Not checked; specific source page needed |
+| umich.commute_cost_ranges.walk.low | 0 | Exact user-reported free travel; no generated uncertainty range | User report | Not provided | 2026-10-03 | Not independently verified |
+| umich.commute_cost_ranges.walk.expected | 0 | Exact user-reported free travel; no generated uncertainty range | User report | Not provided | 2026-10-03 | Not independently verified |
+| umich.commute_cost_ranges.walk.high | 0 | Exact user-reported free travel; no generated uncertainty range | User report | Not provided | 2026-10-03 | Not independently verified |
+| umich.commute_cost_ranges.bike.low | 0 | Exact user-reported free travel; no generated uncertainty range | User report | Not provided | 2026-10-03 | Not independently verified |
+| umich.commute_cost_ranges.bike.expected | 0 | Exact user-reported free travel; no generated uncertainty range | User report | Not provided | 2026-10-03 | Not independently verified |
+| umich.commute_cost_ranges.bike.high | 0 | Exact user-reported free travel; no generated uncertainty range | User report | Not provided | 2026-10-03 | Not independently verified |
+| umich.academic_period.start | 2026-08 | Academic period start supplied by user | User report | Not provided | 2026-10-03 | Not independently verified |
+| umich.academic_period.end | 2027-04 | Academic period end supplied by user | User report | Not provided | 2026-10-03 | Not independently verified |
+| umich.Downtown/Campus.reported_column_1.low | 2099 | User-supplied overall rent or shared per-person endpoint; not a median. First column overall rent labeled 1-2 Beds; second column shared per-person rent; neighborhood confirmed as Downtown/Campus | Roomies.com | https://www.roomies.com | 2026-10-03 | 2026-10-03: homepage cannot verify neighborhood ranges; listing links needed |
+| umich.Downtown/Campus.reported_column_1.high | 3500+ | User-supplied overall rent or shared per-person endpoint; not a median. First column overall rent labeled 1-2 Beds; second column shared per-person rent; neighborhood confirmed as Downtown/Campus | Roomies.com | https://www.roomies.com | 2026-10-03 | 2026-10-03: homepage cannot verify neighborhood ranges; listing links needed |
+| umich.Downtown/Campus.reported_column_2.low | 1100 | User-supplied overall rent or shared per-person endpoint; not a median. First column overall rent labeled 1-2 Beds; second column shared per-person rent; neighborhood confirmed as Downtown/Campus | Roomies.com | https://www.roomies.com | 2026-10-03 | 2026-10-03: homepage cannot verify neighborhood ranges; listing links needed |
+| umich.Downtown/Campus.reported_column_2.high | 1600+ | User-supplied overall rent or shared per-person endpoint; not a median. First column overall rent labeled 1-2 Beds; second column shared per-person rent; neighborhood confirmed as Downtown/Campus | Roomies.com | https://www.roomies.com | 2026-10-03 | 2026-10-03: homepage cannot verify neighborhood ranges; listing links needed |
+
+| umich.Kerrytown.rent_low | 1000 | Overall monthly rent range endpoint; no bedroom-specific median | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Kerrytown.rent_high | 2500 | Overall monthly rent range endpoint; no bedroom-specific median | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Kerrytown.shared_rent_per_person_low | 900 | Shared monthly rent per-person range endpoint | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Kerrytown.shared_rent_per_person_high | 1250 | Shared monthly rent per-person range endpoint | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Burns Park.rent_low | 1357 | Overall monthly rent range endpoint; no bedroom-specific median | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Burns Park.rent_high | 1900 | Overall monthly rent range endpoint; no bedroom-specific median | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Burns Park.shared_rent_per_person_low | 850 | Shared monthly rent per-person range endpoint | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Burns Park.shared_rent_per_person_high | 1000 | Shared monthly rent per-person range endpoint | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Oxbridge.rent_low | 956 | Overall monthly rent range endpoint; no bedroom-specific median | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Oxbridge.rent_high | 1600 | Overall monthly rent range endpoint; no bedroom-specific median | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Oxbridge.shared_rent_per_person_low | 785 | Shared monthly rent per-person range endpoint | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Oxbridge.shared_rent_per_person_high | 950 | Shared monthly rent per-person range endpoint | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Glazier Way / North Side.rent_low | 1380 | Overall monthly rent range endpoint; no bedroom-specific median | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Glazier Way / North Side.rent_high | 1800 | Overall monthly rent range endpoint; no bedroom-specific median | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Glazier Way / North Side.shared_rent_per_person_low | 800 | Shared monthly rent per-person range endpoint | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Glazier Way / North Side.shared_rent_per_person_high | 950 | Shared monthly rent per-person range endpoint | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Homepage does not substantiate the specific figures; listing links needed |
+| umich.Downtown/Campus.rent_low | 2099 | Overall monthly rent lower endpoint; upper figure is open-ended | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Listing links needed |
+| umich.Downtown/Campus.shared_rent_per_person_low | 1100 | Shared monthly rent per-person lower endpoint; upper figure is open-ended | Roomies.com, as reported by user | https://www.roomies.com | 2026-10-03 | Listing links needed |
