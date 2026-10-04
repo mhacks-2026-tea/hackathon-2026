@@ -26,8 +26,8 @@ export interface NessieAdapterOptions {
 }
 
 /** Convert the demo's dollar units into integer cents without inventing zeroes. */
-function dollarsToCents(amount: number | null): number | null {
-  if (amount === null || !Number.isFinite(amount) || amount < 0) return null;
+function dollarsToCents(amount: number | null, allowNegative = false): number | null {
+  if (amount === null || !Number.isFinite(amount) || (!allowNegative && amount < 0)) return null;
   const cents = Math.round(amount * 100);
   return Number.isSafeInteger(cents) ? cents : null;
 }
@@ -51,8 +51,8 @@ export function adaptNessieData(
   if (!["Checking", "Savings"].includes(data.accountType)) {
     throw new Error("Use a Checking or Savings account, not a credit balance.");
   }
-  const balance = dollarsToCents(data.balance);
-  if (balance === null) throw new Error("A valid non-negative account balance is required.");
+  const balance = dollarsToCents(data.balance, true);
+  if (balance === null) throw new Error("A valid account balance is required.");
   if (!validDate(options.asOfDate) || !validDate(options.historyStartDate)
     || options.historyStartDate > options.asOfDate) {
     throw new Error("Provide a valid inclusive history window.");
