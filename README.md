@@ -1,5 +1,26 @@
 # hackathon-2026
 
+# Movin 🏠
+
+An AI financial copilot that helps college students understand how housing choices could affect their finances throughout the school year.
+
+Built at MHacks 2026, Movin calculates monthly housing costs, move-in expenses, and projected balances. Students can explore scenarios through chat, compare living alone with sharing an apartment, and identify potential cash shortages.
+
+The hackathon demo uses fictional financial inputs and campus cost estimates.
+
+## Explore Movin
+
+- [Try the live demo](https://hackathon-2026-eight-ruby.vercel.app/)
+- [Read our Devpost story](https://devpost.com/software/movin)
+
+## Tech stack
+
+Next.js, React, TypeScript, Tailwind CSS, and Python, with Capital One’s Nessie sandbox API and Fetch.ai’s ASI API. Designed in Figma and deployed on Vercel.
+
+## Prediction and machine learning
+
+Movin forecasts balances using spending history, housing costs, and explicitly scheduled cash flows. A weekday spending model is selected when sufficient history is available and historical evaluation shows it outperforms a simple average.
+
 ## Nessie integration
 
 The server-side TypeScript integration fetches and normalizes Nessie banking data for the finance agent.
